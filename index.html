@@ -1,1 +1,41 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>استودیوی یادگیری | مفید آکادمی</title>
+<style>
+html,body{height:100%;margin:0;font-family:Tahoma,Arial,sans-serif;background:#f3faf8;color:#0f4f49}
+body{display:grid;place-items:center}
+.box{background:#fff;border:1px solid #dcece8;border-radius:20px;padding:28px 34px;box-shadow:0 20px 60px #0b4f4520;text-align:center;min-width:260px}
+.spin{width:34px;height:34px;border:3px solid #d8eeea;border-top-color:#159b8e;border-radius:50%;margin:0 auto 14px;animation:s .8s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+small{display:block;margin-top:8px;opacity:.65}
+</style>
+</head>
+<body>
+<div class="box"><div class="spin"></div><strong>در حال بارگذاری استودیوی یادگیری...</strong><small>لطفاً چند لحظه صبر کنید.</small></div>
+<script>
+(async()=>{
+  const groups=[["chunks/0001-0001-00.txt"],["chunks/0002-0002-00.txt","chunks/0002-0002-01.txt"],["chunks/0003-0003-00.txt","chunks/0003-0003-01.txt","chunks/0003-0003-02.txt","chunks/0003-0003-03.txt","chunks/0003-0003-04.txt"],["chunks/0004-0014-00.txt"],["chunks/0015-0016-00.txt"],["chunks/0017-0017-00.txt"],["chunks/0018-0025-00.txt"],["chunks/0026-0065-00.txt"],["chunks/0066-0111-00.txt"],["chunks/0112-0119-00.txt"],["chunks/0120-0162-00.txt"],["chunks/0163-0173-00.txt"],["chunks/0174-0286-00.txt"],["chunks/0287-0287-00.txt"],["chunks/0288-0288-00.txt"],["chunks/0289-1445-00.txt"],["chunks/1446-2633-00.txt"],["chunks/2634-3309-00.txt"],["chunks/3310-4155-00.txt"],["chunks/4156-4532-00.txt"]];
+  try{
+    const pieces=[];
+    for(const files of groups){
+      const texts=await Promise.all(files.map(async p=>{
+        const r=await fetch(p,{cache:"no-store"});
+        if(!r.ok) throw new Error(p+" "+r.status);
+        return await r.text();
+      }));
+      pieces.push(texts.join("")+"\n");
+    }
+    const html=pieces.join("");
+    document.open();
+    document.write(html);
+    document.close();
+  }catch(e){
+    document.body.innerHTML='<div class="box"><strong>خطا در بارگذاری سایت</strong><small>'+String(e).replace(/[<>&]/g,"")+'</small></div>';
+  }
+})();
+</script>
+</body>
+</html>
