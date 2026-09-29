@@ -26,7 +26,7 @@ small{display:block;margin-top:8px;opacity:.65}
         if(!r.ok) throw new Error(p+" "+r.status);
         return await r.text();
       }));
-      pieces.push(texts.join("")+"\n");
+      pieces.push(texts.join("")+(pieces.length===3?"\u0085":"\n"));
     }
     const html=pieces.join("");
     document.open();
