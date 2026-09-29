@@ -19,15 +19,14 @@ small{display:block;margin-top:8px;opacity:.65}
 (async()=>{
   const groups=[["chunks/0001-0001-00.txt"],["chunks/0002-0002-00.txt","chunks/0002-0002-01.txt"],["chunks/0003-0003-00.txt","chunks/0003-0003-01.txt","chunks/0003-0003-02.txt","chunks/0003-0003-03.txt","chunks/0003-0003-04.txt"],["chunks/0004-0014-00.txt"],["chunks/0015-0016-00.txt"],["chunks/0017-0017-00.txt"],["chunks/0018-0025-00.txt"],["chunks/0026-0065-00.txt"],["chunks/0066-0111-00.txt"],["chunks/0112-0119-00.txt"],["chunks/0120-0162-00.txt"],["chunks/0163-0173-00.txt"],["chunks/0174-0286-00.txt"],["chunks/0287-0287-00.txt"],["chunks/0288-0288-00.txt"],["chunks/0289-1445-00.txt"],["chunks/1446-2633-00.txt"],["chunks/2634-3309-00.txt"],["chunks/3310-4155-00.txt"],["chunks/4156-4532-00.txt"]];
   try{
-    const pieces=[];
-    for(const files of groups){
+    const pieces=await Promise.all(groups.map(async (files,i)=>{
       const texts=await Promise.all(files.map(async p=>{
-        const r=await fetch(p,{cache:"no-store"});
+        const r=await fetch(p);
         if(!r.ok) throw new Error(p+" "+r.status);
         return await r.text();
       }));
-      pieces.push(texts.join("")+(pieces.length===3?"\u0085":"\n"));
-    }
+      return texts.join("")+(i===3?"\u0085":"\n");
+    }));
     const html=pieces.join("");
     document.open();
     document.write(html);
