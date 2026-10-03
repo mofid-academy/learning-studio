@@ -56,6 +56,16 @@ function JC(title,modules){
  }
  return slides.slice(0,250);
 }
+function mofidNormalizeModule(raw,index){
+ const array=x=>Array.isArray(x)?x:[];
+ const questions=array(raw.questions).length?raw.questions:array(raw.quiz).length?raw.quiz:array(raw.quiz?.questions);
+ const sections=array(raw.sections).map(s=>({...s,body:s.body|| (Array.isArray(s.content)?s.content.join('\n'):typeof s.content==='string'?s.content:'') ||s.text||''}));
+ const points=array(raw.keyPoints).length?raw.keyPoints:array(raw.key_points).length?raw.key_points:sections.flatMap(s=>array(s.key_points));
+ const objectives=array(raw.objectives).length?raw.objectives:array(raw.learning_objectives);
+ return{...raw,id:'m'+(index+1),objectives:objectives.slice(0,12),keyPoints:points.slice(0,12),sections,
+  questions:questions.map((q,j)=>{const value=q.answer??q.correct_answer??q.correctAnswer;const numeric=typeof value==='number'?value:typeof value==='string'&&/^\d$/.test(value.trim())?Number(value.trim()):undefined;const answer=numeric??array(q.options).indexOf(value);return{...q,id:'q'+j,answer};}),
+  flashcards:array(raw.flashcards).map((f,j)=>({...f,id:'f'+j}))};
+}
 async function YC(sources,sourceName,settings,onProgress,signal,auth){
  let groups=KC(sources,settings.modules),modules=[];
  const credentials=auth?.username&&auth.password?btoa(String.fromCharCode(...new TextEncoder().encode(auth.username+':'+auth.password))):'';
@@ -67,7 +77,7 @@ async function YC(sources,sourceName,settings,onProgress,signal,auth){
   if(!response.ok)throw Error(data.error||'تولید محتوا انجام نشد (HTTP '+response.status+').');
   if(Array.isArray(data))data=data[0];let raw=data.module??data;
   if(typeof raw==='string'){raw=JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g,''));raw=raw.module??raw;}
-  const m=wg.parse({...raw,id:'m'+(index+1),objectives:raw.objectives||[],keyPoints:raw.keyPoints||[],questions:(raw.questions||[]).map((q,j)=>({...q,id:'q'+j})),flashcards:(raw.flashcards||[]).map((f,j)=>({...f,id:'f'+j}))});
+  const m=wg.parse(mofidNormalizeModule(raw,index));
   const refs=new Set(group.map(s=>s.id));for(const x of [...m.sections,...m.questions,...m.flashcards])if(x.sourceIds.some(id=>!refs.has(id)))throw Error('خروجی هوش مصنوعی ارجاع نامعتبر دارد.');
   return m;
  }
