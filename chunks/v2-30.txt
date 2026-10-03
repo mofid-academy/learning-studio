@@ -14,14 +14,33 @@ l)/6-r)/a,((o+c)/2-n)/i,((s+l)/2-r)/a),[c,l,o,s,_,v]=this.#a.subarray(12,18),thi
  return groups;
 }
 function mofidUnique(items, text){const seen=new Set();return items.filter(x=>{const key=String(text(x)).normalize('NFKC').replace(/[\s\u200c\p{P}]+/gu,'').toLowerCase();if(!key||seen.has(key))return false;seen.add(key);return true;});}
+function mofidFacts(group){return mofidUnique(group.flatMap(s=>HC(s.text).filter(t=>t.trim().length>=28&&t.length<=950).map(t=>({t:t.trim(),source:s.id}))),x=>x.t);}
+function mofidNotCloze(q){return !/جای[\s‌-]*خالی|ــــ|_{2,}|\.{3,}|…/u.test(q.question);}
+function mofidGroundedQuestion(q,group){
+ if(!mofidNotCloze(q))return false;
+ const cited=group.filter(s=>q.sourceIds.includes(s.id)).map(s=>s.text).join(' ');
+ const normalize=s=>s.normalize('NFKC').replace(/ي/g,'ی').replace(/ك/g,'ک');
+ const tokens=s=>[...new Set(normalize(s).match(/[\p{L}\p{N}‌]{3,}/gu)||[])];
+ const evidence=tokens(q.explanation);if(!evidence.length)return false;
+ const sourceWords=new Set(tokens(cited));return evidence.filter(w=>sourceWords.has(w)).length/evidence.length>=.45;
+}
 function qC(group,index,settings,all){
  const id='m'+(index+1),first=group[0],title=GC(first.heading||first.text.split('\n').find(x=>x.length>4&&x.length<120)||first.label,90);
- const facts=mofidUnique(group.flatMap(s=>HC(s.text).filter(t=>t.trim().length>=18&&t.length<1100).map(t=>({t:t.trim(),source:s.id}))),x=>x.t);
- const vocab=[...new Set(WC(all.map(s=>s.text).join(' ')))],questions=[];
- for(const fact of facts){if(questions.length>=settings.questions)break;const keys=[...new Set(WC(fact.t))].sort((a,b)=>b.length-a.length);const key=keys.find(k=>vocab.filter(w=>w!==k&&!fact.t.includes(w)).length>=3);if(!key)continue;const options=vocab.filter(w=>w!==key&&!fact.t.includes(w)).sort((a,b)=>Math.abs(a.length-key.length)-Math.abs(b.length-key.length)).slice(0,3);const answer=questions.length%4;options.splice(answer,0,key);questions.push({id:id+'-q'+questions.length,question:'طبق جزوه، جای خالی را کامل کنید:\n'+fact.t.replaceAll(key,'ــــــ'),options,answer,explanation:fact.t,sourceIds:[fact.source]});}
- if(!questions.length&&facts.length){const fact=facts[0],key=[...new Set(WC(fact.t))].sort((a,b)=>b.length-a.length)[0];if(key){const distractors=[...new Set([...vocab,'مفهوم','فرایند','ویژگی','ساختار','عامل','نتیجه','روش','مقدار','هدف'])].filter(w=>w!==key&&!fact.t.includes(w));const options=[key,...distractors.slice(0,3)];if(options.length===4)questions.push({id:id+'-q0',question:'بر اساس جزوه، جای خالی را کامل کنید:\n'+fact.t.replace(key,'ــــــ'),options,answer:0,explanation:fact.t,sourceIds:[fact.source]});}}
- const tested=new Set(questions.map(q=>q.explanation));const cardFacts=[...facts.filter(f=>!tested.has(f.t)),...facts.filter(f=>tested.has(f.t))];
- const flashcards=cardFacts.slice(0,settings.cards).map((f,j)=>{const concept=WC(f.t).sort((a,b)=>b.length-a.length)[0]||title;return{id:id+'-f'+j,front:'ارتباط «'+[...new Set(WC(f.t))].sort((a,b)=>b.length-a.length).slice(0,2).join('» و «')+'» را طبق جزوه توضیح دهید.',back:f.t,sourceIds:[f.source]};});
+ const facts=mofidFacts(group),questions=[];
+ // The fallback is a source-reading question. Every option is an intact
+ // statement from this chapter; only the correct statement contains the topic.
+ // No vocabulary from other chapters, invented names or fabricated claims.
+ for(const fact of facts){
+  if(questions.length>=Math.max(1,settings.questions))break;
+  const keys=[...new Set(WC(fact.t))].filter(w=>!['میتواند','می‌تواند','کرده','باشد','درباره','همچنین','استفاده','باید','برای','میشود','می‌شود','گردد','آنها','اینکه'].includes(w)).sort((a,b)=>b.length-a.length);
+  let key='',others=[];
+  for(const candidate of keys){const rest=facts.filter(f=>f.t!==fact.t&&!f.t.includes(candidate));if(rest.length>=3){key=candidate;others=rest;break;}}
+  if(!key)continue;
+  const idx=questions.length,answer=(index+idx)%4,options=others.slice(0,3).map(f=>f.t);options.splice(answer,0,fact.t);
+  const forms=['کدام عبارت در جزوه دربارهٔ «'+key+'» آمده است؟','طبق متن این فصل، کدام توضیح به «'+key+'» مربوط است؟','کدام گزینه، توضیح جزوه دربارهٔ «'+key+'» را بیان می‌کند؟'];
+  questions.push({id:id+'-q'+idx,question:forms[idx%forms.length],options,answer,explanation:fact.t,sourceIds:[...new Set([fact.source,...others.slice(0,3).map(f=>f.source)])]});
+ }
+ const flashcards=facts.slice(0,settings.cards).map((f,j)=>({id:id+'-f'+j,front:'دربارهٔ «'+[...new Set(WC(f.t))].sort((a,b)=>b.length-a.length).slice(0,2).join('» و «')+'» چه نکته‌ای در جزوه آمده است؟',back:f.t,sourceIds:[f.source]}));
  return{id,title,summary:facts[0]?.t||first.text.slice(0,500),objectives:['توضیح مفاهیم اصلی '+title],sections:group.map(s=>({title:s.heading||s.label,body:s.text,sourceIds:[s.id]})),keyPoints:facts.slice(0,8).map(f=>f.t),questions,flashcards};
 }
 function JC(title,modules){
@@ -42,9 +61,9 @@ async function YC(sources,sourceName,settings,onProgress,signal,auth){
  let groups=KC(sources,settings.modules),modules=[];
  const credentials=auth?.username&&auth.password?btoa(String.fromCharCode(...new TextEncoder().encode(auth.username+':'+auth.password))):'';
  async function request(group,index,task,avoid=[]){
-  const directions={quiz:'آزمون مستقل طراحی کن: سؤال‌های مفهومی، مقایسه‌ای و کاربردی متنوع، چهار گزینه معتبر و توضیح پاسخ. از سؤال‌های کلی و تکراری پرهیز کن.',cards:'فلش‌کارت مستقل برای بازیابی فعال طراحی کن: تعریف، رابطه، علت و مقایسه. صورت سؤال آزمون را کپی نکن. کارت جای خالی و کارت چندگزینه‌ای نساز.',presentation:'محتوای یک ارائه آموزشی مستقل بساز. sections شامل توضیح منسجم مفاهیم، روابط و مثال‌های موجود در منبع باشد؛ keyPoints جمع‌بندی باشد. صرفاً سؤال یا فلش‌کارت را به اسلاید تبدیل نکن.'};
+  const directions={quiz:'آزمون مستقل طراحی کن: سؤال‌های مفهومی، مقایسه‌ای، علت و معلول، ترتیب مراحل و کاربردی متنوع. سؤال جای خالی نساز. هر سؤال یک مفهوم آموزشی همین فصل را بسنجد. چهار گزینه هم‌موضوع و باورپذیر، فقط یک پاسخ درست و توضیح مستند بده. نام اشخاص و کلمات نامرتبط را به‌عنوان گزینه استفاده نکن. سؤال‌ها و گزینه‌ها را از فصل‌های دیگر برندار.',quizRepair:'بازسازی آزمون: خروجی پیشین سؤال معتبر نداشت یا جای خالی بود. دست‌کم یک سؤال مفهومی چهارگزینه‌ای روشن و مستند از شرط، مراحل یا مفهوم اصلی همین فصل بساز. سؤال جای خالی، متن حذف‌کلمه‌ای یا گزینه‌های تک‌واژه‌ای بی‌ربط ممنوع است. تعداد کم با کیفیت بالا بهتر است. همه گزینه‌ها به موضوع همان سؤال مربوط باشند؛ پاسخ و توضیح فقط از همین منابع باشد.',cards:'فلش‌کارت مستقل برای بازیابی فعال طراحی کن: تعریف، رابطه، علت و مقایسه. صورت سؤال آزمون را کپی نکن. کارت جای خالی و کارت چندگزینه‌ای نساز.',presentation:'محتوای یک ارائه آموزشی مستقل بساز. sections شامل توضیح منسجم مفاهیم، روابط و مثال‌های موجود در منبع باشد؛ keyPoints جمع‌بندی باشد. صرفاً سؤال یا فلش‌کارت را به اسلاید تبدیل نکن.'};
   const instruction=directions[task]+' فقط به منابع تکیه کن؛ واقعیت یا مثال خارج از جزوه نساز. تعداد خروجی متناسب با محتوای واقعی باشد. '+(avoid.length?'این صورت سؤال‌ها را تکرار نکن: '+avoid.slice(0,20).join(' | '):'');
-  const response=await fetch('https://miladmirsheriseyed.app.n8n.cloud/webhook/mofid-learning-module-gemini',{method:'POST',headers:{'Content-Type':'application/json',...(credentials?{Authorization:'Basic '+credentials}:{})},body:JSON.stringify({sources:group.map(({images,...s})=>s),title:(settings.title||'دوره آموزشی')+'\nراهنمای تولید: '+instruction,instructions:instruction,task,moduleNumber:index+1,questions:Math.max(1,settings.questions),cards:Math.max(1,settings.cards)}),signal,redirect:'error'});
+  const response=await fetch('https://miladmirsheriseyed.app.n8n.cloud/webhook/mofid-learning-module-gemini',{method:'POST',headers:{'Content-Type':'application/json',...(credentials?{Authorization:'Basic '+credentials}:{})},body:JSON.stringify({sources:group.map(({images,...s})=>s),title:(settings.title||'دوره آموزشی')+'\nراهنمای تولید: '+instruction,instructions:instruction,task,moduleNumber:index+1,questions:task==='quizRepair'?1:Math.max(1,settings.questions),cards:Math.max(1,settings.cards)}),signal,redirect:'error'});
   let data;try{data=await response.json();}catch{throw Error('پاسخ وبهوک JSON معتبر نیست. خروجی نود آخر n8n را بررسی کنید.');}
   if(!response.ok)throw Error(data.error||'تولید محتوا انجام نشد (HTTP '+response.status+').');
   if(Array.isArray(data))data=data[0];let raw=data.module??data;
@@ -58,10 +77,11 @@ async function YC(sources,sourceName,settings,onProgress,signal,auth){
   if(signal?.aborted)throw new DOMException('لغو شد','AbortError');let m;
   onProgress(Math.round(i/groups.length*88),'ساخت آزمون فصل '+(i+1)+' از '+groups.length+'…');
   if(settings.mode==='ai'){
-   m=await request(groups[i],i,'quiz',[...usedQuestions]);m.questions=mofidUnique(m.questions,q=>q.question).filter(q=>!usedQuestions.has(q.question.trim()));
+   m=await request(groups[i],i,'quiz',[...usedQuestions]);m.questions=mofidUnique(m.questions,q=>q.question).filter(q=>mofidGroundedQuestion(q,groups[i])&&!usedQuestions.has(q.question.trim()));
+   if(!m.questions.length){onProgress(Math.round(i/groups.length*88),'بازسازی سؤال مفهومی فصل '+(i+1)+'…');const repair=await request(groups[i],i,'quizRepair',[...usedQuestions]);m.questions=mofidUnique(repair.questions,q=>q.question).filter(q=>mofidGroundedQuestion(q,groups[i])&&!usedQuestions.has(q.question.trim()));}
    if(!m.questions.length&&groups.length>1){const j=i+1<groups.length?i+1:i-1;const start=Math.min(i,j),merged=[...groups[start],...groups[start+1]];if(merged.reduce((n,s)=>n+s.text.length,0)<=22000){groups.splice(start,2,merged);if(j<i){modules.pop();usedQuestions.clear();usedCards.clear();for(const old of modules){old.questions.forEach(q=>usedQuestions.add(q.question.trim()));old.flashcards.forEach(f=>usedCards.add(f.front.trim()));}}i=start-1;continue;}}
    if(!m.questions.length)m.questions=qC(groups[i],i,settings,sources).questions;
-   if(!m.questions.length)throw Error('متن این فصل پس از استخراج، واژه یا جملهٔ کافی برای ساخت یک سؤال هم ندارد؛ فایل احتمالاً اسکن تصویری است یا استخراج متن آن خالی مانده است.');
+   if(!m.questions.length)throw Error('مدل پس از تلاش مجدد سؤال مفهومی مستند نداد؛ برای بررسی، خروجی مرحلهٔ آزمون n8n و متن این فصل را ارسال کنید.');
    onProgress(Math.round((i+.33)/groups.length*88),'ساخت فلش‌کارت‌های مستقل فصل '+(i+1)+'…');
    const cards=await request(groups[i],i,'cards',m.questions.map(q=>q.question));const prompts=new Set(m.questions.map(q=>q.question.replace(/[\s\p{P}]+/gu,'')));
    m.flashcards=mofidUnique(cards.flashcards,f=>f.front).filter(f=>!prompts.has(f.front.replace(/[\s\p{P}]+/gu,''))&&!usedCards.has(f.front.trim()));
