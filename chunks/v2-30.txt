@@ -57,15 +57,62 @@ function JC(title,modules){
  }
  return slides.slice(0,250);
 }
-function mofidNormalizeModule(raw,index){
+function mofidReadModule(data){
+ for(let depth=0;depth<8;depth++){
+  if(typeof data==='string'){data=JSON.parse(data.trim().replace(/^```(?:json)?\s*|\s*```$/g,''));continue;}
+  if(Array.isArray(data)){data=data[0];continue;}
+  if(!data||typeof data!=='object')return{};
+  if(data.module!=null){data=data.module;continue;}
+  if(data.sections||data.questions||data.quiz||data.flashcards)return data;
+  const key=['data','result','output','json','text','response','body'].find(k=>data[k]!=null);
+  if(!key)return data;data=data[key];
+ }
+ return{};
+}
+function mofidNormalizeModule(raw,index,group=[]){
+ raw=raw&&typeof raw==='object'?raw:{};
  const array=x=>Array.isArray(x)?x:[];
- const questions=array(raw.questions).length?raw.questions:array(raw.quiz).length?raw.quiz:array(raw.quiz?.questions);
- const sections=array(raw.sections).map(s=>({...s,body:s.body|| (Array.isArray(s.content)?s.content.join('\n'):typeof s.content==='string'?s.content:'') ||s.text||''}));
- const points=array(raw.keyPoints).length?raw.keyPoints:array(raw.key_points).length?raw.key_points:sections.flatMap(s=>array(s.key_points));
- const objectives=array(raw.objectives).length?raw.objectives:array(raw.learning_objectives);
- return{...raw,id:'m'+(index+1),objectives:objectives.slice(0,12),keyPoints:points.slice(0,12),sections,
-  questions:questions.map((q,j)=>{const value=q.answer??q.correct_answer??q.correctAnswer;const numeric=typeof value==='number'?value:typeof value==='string'&&/^\d$/.test(value.trim())?Number(value.trim()):undefined;const answer=numeric??array(q.options).indexOf(value);return{...q,id:'q'+j,answer};}),
-  flashcards:array(raw.flashcards).map((f,j)=>({...f,id:'f'+j}))};
+ const text=x=>typeof x==='string'?x:Array.isArray(x)?x.map(text).filter(Boolean).join('\n'):x&&typeof x==='object'?text(x.text??x.content):'';
+ const list=(...values)=>values.map(array).find(a=>a.length)||[];
+ const clean=s=>String(s).normalize('NFKC').replace(/ي/g,'ی').replace(/ك/g,'ک').replace(/‌/g,' ');
+ const words=s=>[...new Set(clean(s).match(/[\p{L}\p{N}]{3,}/gu)||[])].filter(w=>!['برای','است','باشد','شده','شود','این','آن','طبق','متن','جزوه','مورد','گزینه','پاسخ','دارد','کرده','باید','براساس','اساس'].includes(w));
+ const allowed=new Set(group.map(s=>s.id));
+ function references(item,evidence){
+  const given=item.sourceIds??item.source_ids??item.sourceId??item.source_id??item.references;
+  const supplied=(Array.isArray(given)?given:typeof given==='string'?[given]:[]).map(x=>typeof x==='string'?x:x?.id).filter(x=>typeof x==='string');
+  const valid=[...new Set(supplied.filter(id=>!group.length||allowed.has(id)))].slice(0,600);
+  if(valid.length)return valid;
+  const terms=words(evidence);if(!terms.length)return[];
+  const ranked=group.map(s=>{const tokens=new Set(words(s.text));return{id:s.id,score:terms.filter(t=>tokens.has(t)).length/terms.length};}).sort((a,b)=>b.score-a.score);
+  if(!ranked.length||ranked[0].score<.6)return[];
+  return [...new Set(ranked.filter(s=>s.score>=Math.max(.6,ranked[0].score-.03)).slice(0,6).map(s=>s.id))];
+ }
+ function accepted(schema,items){return items.flatMap(item=>{const result=schema.safeParse(item);return result.success?[result.data]:[];});}
+ const rawSections=array(raw.sections);
+ let sections=accepted(wg.shape.sections.element,rawSections.map(s=>{s=s&&typeof s==='object'?s:{};const body=text(s.body)||text(s.content)||text(s.text);return{title:(text(s.title)||text(s.heading)||'شرح فصل').slice(0,500),body:body.slice(0,100000),sourceIds:references(s,body)};})).filter(s=>s.body.trim());
+ if(!sections.length)sections=group.filter(s=>s.text.trim()).map(s=>({title:s.heading||s.label,body:s.text,sourceIds:[s.id]}));
+ sections=sections.slice(0,600);
+ const rawQuestions=list(raw.questions,raw.quiz,raw.quiz?.questions,raw.assessment?.questions);
+ const questions=accepted(wg.shape.questions.element,rawQuestions.map((q,j)=>{
+  q=q&&typeof q==='object'?q:{};
+  const options=list(q.options,q.choices).map(o=>text(o)||text(o?.label)||text(o?.value));
+  const value=q.answer??q.correct_answer??q.correctAnswer??q.correct_answer_index??q.answerIndex;
+  const str=typeof value==='string'?value.trim().replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))):'';
+  const letter=['A','B','C','D'].indexOf(str.toUpperCase()),persian=['الف','ب','ج','د'].indexOf(str);
+  const numeric=typeof value==='number'?value:/^[0-3]$/.test(str)?Number(str):undefined;
+  const answer=numeric??(options.indexOf(value)>=0?options.indexOf(value):letter>=0?letter:persian);
+  const question=text(q.question)||text(q.prompt)||text(q.text);
+  const explanation=text(q.explanation)||text(q.rationale)||text(q.reason);
+  const evidence=explanation||question+' '+(options[answer]||'');
+  let sourceIds=references(q,evidence);if(!sourceIds.length)sourceIds=references(q,question+' '+(options[answer]||''));
+  const cited=group.find(s=>sourceIds.includes(s.id));
+  const support=explanation|| (cited?HC(cited.text).find(s=>options[answer]&&clean(s).includes(clean(options[answer])))||'':'');
+  return{id:'q'+j,question,options,answer,explanation:support,sourceIds};
+ })).slice(0,40);
+ const flashcards=accepted(wg.shape.flashcards.element,list(raw.flashcards,raw.flash_cards,raw.cards).map((f,j)=>{f=f&&typeof f==='object'?f:{};const front=text(f.front)||text(f.question),back=text(f.back)||text(f.answer);return{id:'f'+j,front,back,sourceIds:references(f,back||front)};})).slice(0,80);
+ const objectives=list(raw.objectives,raw.learning_objectives,raw.learningObjectives).map(text).filter(Boolean).slice(0,12);
+ const points=list(raw.keyPoints,raw.key_points,rawSections.flatMap(s=>array(s?.key_points))).map(text).filter(Boolean).slice(0,12);
+ return{id:'m'+(index+1),title:(text(raw.title)||group[0]?.heading||group[0]?.label||'فصل '+(index+1)).slice(0,500),summary:(text(raw.summary)||sections[0]?.body||'').slice(0,6000),objectives,sections,keyPoints:points,questions,flashcards};
 }
 async function YC(sources,sourceName,settings,onProgress,signal,auth){
  let groups=KC(sources,settings.modules),modules=[];
@@ -76,9 +123,8 @@ async function YC(sources,sourceName,settings,onProgress,signal,auth){
   const response=await fetch('https://miladmirsheriseyed.app.n8n.cloud/webhook/mofid-learning-module-gemini',{method:'POST',headers:{'Content-Type':'application/json',...(credentials?{Authorization:'Basic '+credentials}:{})},body:JSON.stringify({sources:group.map(({images,...s})=>s),title:(settings.title||'دوره آموزشی')+'\nراهنمای تولید: '+instruction,instructions:instruction,task,moduleNumber:index+1,questions:task==='quizRepair'?1:Math.max(1,settings.questions),cards:Math.max(1,settings.cards)}),signal,redirect:'error'});
   let data;try{data=await response.json();}catch{throw Error('پاسخ وبهوک JSON معتبر نیست. خروجی نود آخر n8n را بررسی کنید.');}
   if(!response.ok)throw Error(data.error||'تولید محتوا انجام نشد (HTTP '+response.status+').');
-  if(Array.isArray(data))data=data[0];let raw=data.module??data;
-  if(typeof raw==='string'){raw=JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g,''));raw=raw.module??raw;}
-  const m=wg.parse(mofidNormalizeModule(raw,index));
+  let raw;try{raw=mofidReadModule(data);}catch{throw Error('پاسخ مدل JSON کامل نیست؛ خروجی نود آخر n8n را بررسی کنید.');}
+  const m=wg.parse(mofidNormalizeModule(raw,index,group));
   const refs=new Set(group.map(s=>s.id));for(const x of [...m.sections,...m.questions,...m.flashcards])if(x.sourceIds.some(id=>!refs.has(id)))throw Error('خروجی هوش مصنوعی ارجاع نامعتبر دارد.');
   return m;
  }
