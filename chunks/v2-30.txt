@@ -16,9 +16,10 @@ l)/6-r)/a,((o+c)/2-n)/i,((s+l)/2-r)/a),[c,l,o,s,_,v]=this.#a.subarray(12,18),thi
 function mofidUnique(items, text){const seen=new Set();return items.filter(x=>{const key=String(text(x)).normalize('NFKC').replace(/[\s\u200c\p{P}]+/gu,'').toLowerCase();if(!key||seen.has(key))return false;seen.add(key);return true;});}
 function qC(group,index,settings,all){
  const id='m'+(index+1),first=group[0],title=GC(first.heading||first.text.split('\n').find(x=>x.length>4&&x.length<120)||first.label,90);
- const facts=mofidUnique(group.flatMap(s=>HC(s.text).filter(t=>t.length>=28&&t.length<1100).map(t=>({t,source:s.id}))),x=>x.t);
+ const facts=mofidUnique(group.flatMap(s=>HC(s.text).filter(t=>t.trim().length>=18&&t.length<1100).map(t=>({t:t.trim(),source:s.id}))),x=>x.t);
  const vocab=[...new Set(WC(all.map(s=>s.text).join(' ')))],questions=[];
  for(const fact of facts){if(questions.length>=settings.questions)break;const keys=[...new Set(WC(fact.t))].sort((a,b)=>b.length-a.length);const key=keys.find(k=>vocab.filter(w=>w!==k&&!fact.t.includes(w)).length>=3);if(!key)continue;const options=vocab.filter(w=>w!==key&&!fact.t.includes(w)).sort((a,b)=>Math.abs(a.length-key.length)-Math.abs(b.length-key.length)).slice(0,3);const answer=questions.length%4;options.splice(answer,0,key);questions.push({id:id+'-q'+questions.length,question:'طبق جزوه، جای خالی را کامل کنید:\n'+fact.t.replaceAll(key,'ــــــ'),options,answer,explanation:fact.t,sourceIds:[fact.source]});}
+ if(!questions.length&&facts.length){const fact=facts[0],key=[...new Set(WC(fact.t))].sort((a,b)=>b.length-a.length)[0];if(key){const distractors=[...new Set([...vocab,'مفهوم','فرایند','ویژگی','ساختار','عامل','نتیجه','روش','مقدار','هدف'])].filter(w=>w!==key&&!fact.t.includes(w));const options=[key,...distractors.slice(0,3)];if(options.length===4)questions.push({id:id+'-q0',question:'بر اساس جزوه، جای خالی را کامل کنید:\n'+fact.t.replace(key,'ــــــ'),options,answer:0,explanation:fact.t,sourceIds:[fact.source]});}}
  const tested=new Set(questions.map(q=>q.explanation));const cardFacts=[...facts.filter(f=>!tested.has(f.t)),...facts.filter(f=>tested.has(f.t))];
  const flashcards=cardFacts.slice(0,settings.cards).map((f,j)=>{const concept=WC(f.t).sort((a,b)=>b.length-a.length)[0]||title;return{id:id+'-f'+j,front:'ارتباط «'+[...new Set(WC(f.t))].sort((a,b)=>b.length-a.length).slice(0,2).join('» و «')+'» را طبق جزوه توضیح دهید.',back:f.t,sourceIds:[f.source]};});
  return{id,title,summary:facts[0]?.t||first.text.slice(0,500),objectives:['توضیح مفاهیم اصلی '+title],sections:group.map(s=>({title:s.heading||s.label,body:s.text,sourceIds:[s.id]})),keyPoints:facts.slice(0,8).map(f=>f.t),questions,flashcards};
@@ -59,7 +60,8 @@ async function YC(sources,sourceName,settings,onProgress,signal,auth){
   if(settings.mode==='ai'){
    m=await request(groups[i],i,'quiz',[...usedQuestions]);m.questions=mofidUnique(m.questions,q=>q.question).filter(q=>!usedQuestions.has(q.question.trim()));
    if(!m.questions.length&&groups.length>1){const j=i+1<groups.length?i+1:i-1;const start=Math.min(i,j),merged=[...groups[start],...groups[start+1]];if(merged.reduce((n,s)=>n+s.text.length,0)<=22000){groups.splice(start,2,merged);if(j<i){modules.pop();usedQuestions.clear();usedCards.clear();for(const old of modules){old.questions.forEach(q=>usedQuestions.add(q.question.trim()));old.flashcards.forEach(f=>usedCards.add(f.front.trim()));}}i=start-1;continue;}}
-   if(!m.questions.length)throw Error('برای این متن سؤال معتبر تولید نشد. متن استخراج‌شده یا خروجی مدل را بررسی کنید؛ فصل خالی ذخیره نشد.');
+   if(!m.questions.length)m.questions=qC(groups[i],i,settings,sources).questions;
+   if(!m.questions.length)throw Error('متن این فصل پس از استخراج، واژه یا جملهٔ کافی برای ساخت یک سؤال هم ندارد؛ فایل احتمالاً اسکن تصویری است یا استخراج متن آن خالی مانده است.');
    onProgress(Math.round((i+.33)/groups.length*88),'ساخت فلش‌کارت‌های مستقل فصل '+(i+1)+'…');
    const cards=await request(groups[i],i,'cards',m.questions.map(q=>q.question));const prompts=new Set(m.questions.map(q=>q.question.replace(/[\s\p{P}]+/gu,'')));
    m.flashcards=mofidUnique(cards.flashcards,f=>f.front).filter(f=>!prompts.has(f.front.replace(/[\s\p{P}]+/gu,''))&&!usedCards.has(f.front.trim()));
