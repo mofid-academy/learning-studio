@@ -1,0 +1,79 @@
+{
+  "name": "مفید آکادمی — ساخت جدول پنل مشترک",
+  "nodes": [
+    {
+      "id": "manual-start",
+      "name": "Start Setup",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "create-portal-table",
+      "name": "Create Portal Table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "mofid_learning_portal",
+        "columns": {
+          "column": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      }
+    },
+    {
+      "id": "setup-note",
+      "name": "Setup Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -270
+      ],
+      "parameters": {
+        "content": "## ساخت جدول پنل مشترک\n۱. این ورک‌فلو را در همان پروژهٔ ورک‌فلوی Portal وارد کنید.\n۲. Execute Workflow را بزنید؛ نیازی به Publish نیست.\n۳. جدول mofid_learning_portal با دو ستون String به نام key و value ایجاد می‌شود.\n۴. در ورک‌فلوی اصلی، جدول را در Load Portal Records و Save Portal Record انتخاب کنید.\nاگر جدول هم‌نام از قبل وجود داشته باشد، دوباره ساخته یا پاک نمی‌شود؛ ستون‌های آن را بررسی کنید.",
+        "height": 230,
+        "width": 640
+      }
+    }
+  ],
+  "connections": {
+    "Start Setup": {
+      "main": [
+        [
+          {
+            "node": "Create Portal Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
