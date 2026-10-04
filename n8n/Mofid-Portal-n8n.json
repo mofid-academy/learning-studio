@@ -25,7 +25,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        220,
+        440,
         0
       ],
       "alwaysOutputData": true,
@@ -35,8 +35,8 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "mofid_learning_portal",
-          "mode": "name"
+          "mode": "id",
+          "value": "={{ $('Ensure Portal Table').first().json.id }}"
         },
         "matchType": "allConditions",
         "filters": {
@@ -54,7 +54,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        660,
         0
       ],
       "onError": "continueErrorOutput",
@@ -68,7 +68,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        660,
+        880,
         0
       ],
       "parameters": {
@@ -102,7 +102,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        880,
+        1320,
         -100
       ],
       "onError": "continueErrorOutput",
@@ -111,44 +111,24 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "mofid_learning_portal",
-          "mode": "name"
+          "mode": "id",
+          "value": "={{ $('Ensure Portal Table').first().json.id }}"
         },
         "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyName": "key",
-              "condition": "eq",
+              "keyName": "={{ 'key' }}",
+              "condition": "={{ 'eq' }}",
               "keyValue": "={{ $json.key }}"
             }
           ]
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "key": "={{ $json.key }}",
-            "value": "={{ $json.value }}"
-          },
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [],
-          "schema": [
-            {
-              "id": "key",
-              "displayName": "key",
-              "type": "string",
-              "required": false,
-              "display": true,
-              "defaultMatch": false
-            },
-            {
-              "id": "value",
-              "displayName": "value",
-              "type": "string",
-              "required": false,
-              "display": true,
-              "defaultMatch": false
-            }
-          ],
+          "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -161,7 +141,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        1120,
+        1540,
         20
       ],
       "parameters": {
@@ -190,8 +170,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        880,
-        240
+        1100,
+        260
       ],
       "parameters": {
         "respondWith": "json",
@@ -212,6 +192,66 @@
           }
         }
       }
+    },
+    {
+      "id": "ensure-table",
+      "name": "Ensure Portal Table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "mofid_learning_portal",
+        "columns": {
+          "column": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      }
+    },
+    {
+      "id": "prepare-record",
+      "name": "Prepare Portal Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -100
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "jsCode": "return $input.all().map(item => ({ json: { key: item.json.key, value: item.json.value } }));"
+      }
+    },
+    {
+      "id": "setup-guide",
+      "name": "Setup Guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -340
+      ],
+      "parameters": {
+        "width": 650,
+        "height": 250,
+        "content": "## راه‌اندازی پنل مفید آکادمی\n۱. در همان Project ایمپورت کنید.\n۲. در Portal API مقدار ADMIN_USERNAME و ADMIN_PASSWORD را تنظیم کنید؛ رمز حداقل ۱۶ نویسه.\n۳. نسخهٔ قبلی پنل را غیرفعال و این نسخه را Publish کنید.\nجدول خودکار ایجاد یا استفاده می‌شود؛ جدول موجود حذف نمی‌شود.\nورک‌فلو Gemini را تغییر ندهید.\nبرای آزمایش، از سایت درخواست ورود ارسال کنید؛ اجرای تکی Save بدون ورودی کافی نیست."
+      }
     }
   ],
   "connections": {
@@ -219,7 +259,7 @@
       "main": [
         [
           {
-            "node": "Load Portal Records",
+            "node": "Ensure Portal Table",
             "type": "main",
             "index": 0
           }
@@ -266,7 +306,7 @@
       "main": [
         [
           {
-            "node": "Save Portal Record",
+            "node": "Prepare Portal Record",
             "type": "main",
             "index": 0
           }
@@ -285,6 +325,42 @@
         [
           {
             "node": "Return Portal Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Storage Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ensure Portal Table": {
+      "main": [
+        [
+          {
+            "node": "Load Portal Records",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Storage Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Portal Record": {
+      "main": [
+        [
+          {
+            "node": "Save Portal Record",
             "type": "main",
             "index": 0
           }
