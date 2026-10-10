@@ -19,7 +19,7 @@ small{display:block;margin-top:8px;opacity:.65}
 (async()=>{
   const files=["chunks/v2-00.txt","chunks/v2-01.txt","chunks/v2-02.txt","chunks/v2-03.txt","chunks/v2-04.txt","chunks/v2-05.txt","chunks/v2-06.txt","chunks/v2-07.txt","chunks/v2-08.txt","chunks/v2-09.txt","chunks/v2-10.txt","chunks/v2-11.txt","chunks/v2-12.txt","chunks/v2-13.txt","chunks/v2-14.txt","chunks/v2-15.txt","chunks/v2-16.txt","chunks/v2-17.txt","chunks/v2-18.txt","chunks/v2-19.txt","chunks/v2-20.txt","chunks/v2-21.txt","chunks/v2-22.txt","chunks/v2-23.txt","chunks/v2-24.txt","chunks/v2-25.txt","chunks/v2-26.txt","chunks/v2-27.txt","chunks/v2-28.txt","chunks/v2-29.txt","chunks/v2-30.txt","chunks/v2-31.txt","chunks/v2-32.txt","chunks/v2-33.txt","chunks/v2-34.txt","chunks/v2-35.txt","chunks/v2-36.txt","chunks/v2-37.txt","chunks/v2-38.txt","chunks/v2-39.txt"];
   try{
-    const html=(await Promise.all(files.map(async p=>{const r=await fetch(p+"?v=20261010-mofidstudio-webhooks-9");if(!r.ok)throw new Error(p+" "+r.status);return r.text()}))).join("");
+    const html=(await Promise.all(files.map(async p=>{const r=await fetch(p+"?v=20261010-orbital-presentation-10");if(!r.ok)throw new Error(p+" "+r.status);return r.text()}))).join("");
     document.open();
     document.write(html);
     document.close();
