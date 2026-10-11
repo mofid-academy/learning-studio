@@ -530,7 +530,7 @@ function MofidPresentationFrame({course,index,onIndex}) {
 var mofidParticipant=false, mofidPortalUser=null, mofidPortalToken='', mofidPortalConfig=null;
 var mofidLocalLoad=ew, mofidLocalSave=QC, mofidLocalDelete=$C;
 var mofidProgressQueue=Promise.resolve();
-const mfStyle=document.createElement('link');mfStyle.rel='stylesheet';mfStyle.href='portal.css?v=20261004';document.head.appendChild(mfStyle);
+const mfStyle=document.createElement('link');mfStyle.rel='stylesheet';mfStyle.href='portal.css?v=20261011-study-surfaces-13';document.head.appendChild(mfStyle);
 const mfElement=T.createElement;
 function mfSessionRead(){try{return JSON.parse(sessionStorage.getItem('mofid-portal-session')||'null')}catch{return null}}
 function mfSessionSave(data){mofidPortalToken=data.token;mofidPortalUser=data.user;sessionStorage.setItem('mofid-portal-session',JSON.stringify({token:data.token,user:data.user}));}
