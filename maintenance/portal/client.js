@@ -1,8 +1,56 @@
+var mfAdminPersistence=false,mfAdminSaveQueues=new Map(),mfAdminLastSyncError=false;
+function mfAdminEnabled(){return mfAdminPersistence&&mofidPortalUser?.role==='admin'&&!mofidParticipant;}
+function mfStorageLabel(){return mfAdminEnabled()?'ذخیره در سرور آکادمی':'ذخیره روی این مرورگر';}
+async function mfAdminSave(course,options={}){
+ const token=mofidPortalToken;
+ if(!mfAdminEnabled())return mofidLocalSave(course);
+ // Keep a local copy as well; server confirmation controls the saved status.
+ const prior=mfAdminSaveQueues.get(course.id)||Promise.resolve();
+ const task=prior.catch(()=>{}).then(async()=>{
+  try{await mofidLocalSave(course);}catch{}
+  if(token!==mofidPortalToken)throw Error('نشست تغییر کرده است؛ دوره ذخیره نشد.');
+  const meta=mfRemoteCourses.get(course.id);
+  const imagesDeferred=Boolean(meta?.images.length)&&!course.sources.some(source=>source.images?.length);
+  const result=await mfApi('saveCourse',{course:kg(course),imagesDeferred,baseRevision:meta?.revision,createIfMissing:options.createIfMissing===true});
+  if(token!==mofidPortalToken)throw Error('نشست تغییر کرده است.');
+  mfRemoteCourses.set(course.id,{revision:result.revision,images:meta?.images||[],editor:true});
+  return result;
+ });
+ mfAdminSaveQueues.set(course.id,task);
+ try{return await task;}finally{if(mfAdminSaveQueues.get(course.id)===task)mfAdminSaveQueues.delete(course.id);}
+}
+async function mfAdminLoad(){
+ const local=await mofidLocalLoad().catch(()=>[]);mfAdminLastSyncError=false;
+ let remote,archived=[];
+ if(mfAdminEnabled()){
+  let result=await mfApi('adminCatalog');remote=result.courses;archived=result.archivedIds||[];
+  const byId=new Map(remote.map(course=>[course.id,course]));let migrated=false;
+  for(const course of local){
+   if(archived.includes(course.id)||byId.get(course.id)?._hasDraft)continue;
+   try{await mfAdminSave(course,{createIfMissing:true});migrated=true;}catch(error){mfAdminLastSyncError=true;ym.error('نسخهٔ محلی حفظ شد، اما ذخیرهٔ دائمی دوره انجام نشد: '+error.message);}
+  }
+  if(migrated){result=await mfApi('adminCatalog');remote=result.courses;archived=result.archivedIds||[];}
+ }else remote=await mfPublishedCourses();
+ const merged=new Map(local.filter(course=>!archived.includes(course.id)).map(course=>[course.id,course]));
+ for(const course of remote)if(course._hasDraft||!merged.has(course.id))merged.set(course.id,course);
+ return [...merged.values()].sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+}
+async function mfAdminArchive(courseId){
+ if(mfAdminEnabled()){
+  const token=mofidPortalToken,prior=mfAdminSaveQueues.get(courseId)||Promise.resolve();
+  const task=prior.catch(()=>{}).then(()=>{if(token!==mofidPortalToken)throw Error('نشست تغییر کرده است.');return mfApi('archiveCourse',{courseId});});
+  mfAdminSaveQueues.set(courseId,task);try{await task;}finally{if(mfAdminSaveQueues.get(courseId)===task)mfAdminSaveQueues.delete(courseId);}
+ }
+ try{await mofidLocalDelete(courseId);}catch(error){if(!mfAdminEnabled())throw error;}
+ mfRemoteCourses.delete(courseId);
+}
+function mfAdminStorage(){ew=mfAdminLoad;QC=mfAdminSave;$C=mfAdminArchive;}
+
 // Remote content stays in this signed-in page's memory, never in public files or shared browser storage.
 var mfProtocol=1,mfOpenSerial=0,mfImageActive=0,mfImageTimer=null;
 var mfRemoteCourses=new Map(),mfImageCache=new Map(),mfImageQueue=[];
 function mfClearContent(){
- mfOpenSerial++;mfProtocol=1;mfRemoteCourses.clear();mfImageCache.clear();
+ mfOpenSerial++;mfProtocol=1;mfAdminPersistence=false;mfAdminSaveQueues.clear();mfRemoteCourses.clear();mfImageCache.clear();
  const queued=mfImageQueue.splice(0);queued.forEach(job=>job.reject(Error('نشست تغییر کرده است؛ دوباره وارد شوید.')));
 }
 function mfRemoteManifest(courseId){return mfRemoteCourses.get(courseId)?.images||[];}
@@ -11,12 +59,12 @@ async function mfPublishedCourses(){
  return mfProtocol>=2?result.courses:result.courses.map(c=>kg(c));
 }
 async function mfLoadCourse(course){
- if(!mofidParticipant||mfProtocol<2)return course;
+ if(mfProtocol<2||(!mofidParticipant&&!course._catalog))return course;
  const token=mofidPortalToken;
- const result=await mfApi('course',{courseId:course.id});
+ const result=await mfApi(mfAdminEnabled()?'adminCourse':'course',{courseId:course.id});
  if(token!==mofidPortalToken)throw Error('نشست تغییر کرده است؛ دوباره وارد شوید.');
  const full=kg(result.course);
- mfRemoteCourses.set(full.id,{revision:result.revision,images:result.images||[]});
+ mfRemoteCourses.set(full.id,{revision:result.revision,images:result.images||[],editor:result.editor===true});
  return full;
 }
 function mfRemoteImage(courseId,imageId,original=false){
@@ -37,7 +85,7 @@ function mfPumpImages(){
   (async()=>{
    try{
     if(first.token!==mofidPortalToken)throw Error('نشست تغییر کرده است؛ دوباره وارد شوید.');
-    const r=await mfApi('images',{courseId:first.courseId,revision:first.revision,imageIds:batch.map(j=>j.imageId),original:first.original});
+    const r=await mfApi('images',{courseId:first.courseId,revision:first.revision,imageIds:batch.map(j=>j.imageId),original:first.original,editor:mfRemoteCourses.get(first.courseId)?.editor===true});
     if(first.token!==mofidPortalToken)throw Error('نشست تغییر کرده است؛ دوباره وارد شوید.');
     for(const job of batch){const item=r.images?.find(i=>i.imageId===job.imageId);if(!item||!/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(item.data||'')){mfImageCache.delete(job.key);job.reject(Error('تصویر معتبر دریافت نشد.'));}else job.resolve(item.data);}
    }catch(error){for(const job of batch){mfImageCache.delete(job.key);job.reject(error);}}
@@ -76,7 +124,7 @@ async function mfImagePreviews(course){
  }
  return result;
 }
-async function mfPublishCourse(course){const full=kg(await mfHydrateCourse(course));const imagePreviews=await mfImagePreviews(full);return mfApi('publish',{course:full,imagePreviews});}
+async function mfPublishCourse(course){const loaded=course._catalog?await mfLoadCourse(course):course;const full=kg(await mfHydrateCourse(loaded));const imagePreviews=await mfImagePreviews(full);return mfApi('publish',{course:full,imagePreviews});}
 function MofidLazySourceImage({image,courseId,index}){
  const ref=T.useRef(null),[data,setData]=T.useState(image.data||'');
  T.useEffect(()=>{
@@ -112,7 +160,7 @@ async function mfApi(action,payload={}){
  try{response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload,token:mofidPortalToken}),cache:'no-store'});}catch{throw Error('اتصال به پنل برقرار نشد؛ انتشار ورک‌فلو، اینترنت و تنظیم CORS وبهوک را بررسی کنید.');}
  let data;try{data=await response.json()}catch{throw Error('پاسخ پنل JSON معتبر نیست؛ نود Return Portal Response را بررسی کنید.');}
  if(!response.ok||data.ok!==true){if(response.status===401&&action!=='login'){mfSessionClear();window.dispatchEvent(new Event('mofid-session-expired'));}const error=Error(data.error||'درخواست انجام نشد (HTTP '+response.status+').');error.status=response.status;throw error;}
- if(data.protocol===2)mfProtocol=2;
+ if(data.protocol===2)mfProtocol=2;if(data.features?.adminStorage===true)mfAdminPersistence=true;
  return data;
 }
 function mfParticipantStorage(){
@@ -137,7 +185,7 @@ function MofidManager({onClose}){
  const [user,setUser]=T.useState(mofidPortalUser),[tab,setTab]=T.useState('courses'),[locals,setLocals]=T.useState([]),[published,setPublished]=T.useState([]),[users,setUsers]=T.useState([]),[reports,setReports]=T.useState([]),[message,setMessage]=T.useState(''),[busy,setBusy]=T.useState(false);
  const [form,setForm]=T.useState({username:'',name:'',organization:'',password:''});
  const [url,setUrl]=T.useState(mofidPortalConfig?.apiUrl||'');
- async function refresh(){setBusy(true);setMessage('');try{const [a,b,c,d]=await Promise.all([mofidLocalLoad(),mfPublishedCourses(),mfApi('users'),mfApi('reports')]);setLocals(a);setPublished(b);setUsers(c.users);setReports(d.reports);}catch(e){setMessage(e.message)}finally{setBusy(false)}}
+ async function refresh(){setBusy(true);setMessage('');try{const [a,b,c,d]=await Promise.all([(mfAdminEnabled()?mfAdminLoad():mofidLocalLoad()),mfPublishedCourses(),mfApi('users'),mfApi('reports')]);setLocals(a);setPublished(b);setUsers(c.users);setReports(d.reports);}catch(e){setMessage(e.message)}finally{setBusy(false)}}
  T.useEffect(()=>{if(user?.role==='admin')void refresh()},[user]);
  const run=async fn=>{if(busy)return;setBusy(true);setMessage('');try{await fn();await refresh();setMessage('ذخیره شد.')}catch(e){setMessage(e.message)}finally{setBusy(false)}};
  const link=new URL('?portal=participant',location.href).href;
@@ -171,7 +219,7 @@ function MofidGateway(){
  if(participant&&!mofidPortalConfig.enabled)return mfElement('div',{className:'panel',style:{maxWidth:540,padding:32,margin:'10vh auto'}},mfElement('h1',null,'پنل شرکت‌کننده‌ها هنوز فعال نشده است'),mfElement('p',null,'مدیر آکادمی باید اتصال سرویس ورود و دوره‌ها را تکمیل کند.'));
  if(mofidPortalConfig.enabled&&!user)return mfElement(T.Fragment,null,mfMessage(error),mfElement(MofidLogin,{participant,onLogin:setUser}));
  mofidParticipant=!!user&&(user.role==='participant'||participant);
- if(mofidParticipant)mfParticipantStorage();else{ew=mofidLocalLoad;QC=mofidLocalSave;$C=mofidLocalDelete;}
+ if(mofidParticipant)mfParticipantStorage();else if(user?.role==='admin')mfAdminStorage();else{ew=mofidLocalLoad;QC=mofidLocalSave;$C=mofidLocalDelete;}
  return mfElement(T.Fragment,null,mfElement(JE,{key:mofidParticipant?'participant':'admin'}),
   mfElement('div',{className:'mofid-portal-controls'},!mofidParticipant&&mfElement('button',{className:'btn small',onClick:()=>setManager(true)},'مدیریت دسترسی و انتشار'),user&&mfElement('button',{className:'btn small',onClick:async()=>{try{await mfApi('logout')}catch{}finally{mfSessionClear();location.reload()}}},'خروج: '+user.name)),
   manager&&mfElement(MofidManager,{onClose:()=>setManager(false)}));

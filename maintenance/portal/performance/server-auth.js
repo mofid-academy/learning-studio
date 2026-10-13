@@ -38,7 +38,7 @@ try {
     const valid=u?.active && (u.role==='admin'?equal(sha(password),sha(ADMIN_PASSWORD)):equal(derived,u.passwordHash));
     if(!valid) return reply({ok:false,error:'نام کاربری یا رمز اشتباه است، یا حساب غیرفعال شده است.'},401,{key:attemptKey,value:{count:attempt.count+1,until:attempt.until}});
     const token=crypto.randomBytes(32).toString('hex'), expiresAt=now+8*60*60*1000;
-    return reply({ok:true,protocol:2,token,expiresAt,user:publicUser(u)},200,{key:'session:'+sha(token),value:{username:u.username,version:u.version,expiresAt}});
+    return reply({ok:true,protocol:2,features:{adminStorage:true},token,expiresAt,user:publicUser(u)},200,{key:'session:'+sha(token),value:{username:u.username,version:u.version,expiresAt}});
   }
   if(typeof body.token!=='string'||!/^[a-f0-9]{64}$/.test(body.token)) fail('برای ادامه وارد شوید.',401);
   const sessionKey='session:'+sha(body.token), session=records.get(sessionKey);
@@ -47,16 +47,18 @@ try {
   const admin=()=>{if(user.role!=='admin')fail('این عملیات فقط برای سوپرادمین است.',403);};
   const courseRecord=id=>{const row=records.get('course:'+id);if(!row?.published)fail('این دوره منتشر نشده یا از دسترس خارج شده است.',404);return row;};
   const ownedProgress=id=>records.get('progress:'+user.username+':'+id)?.progress||emptyProgress();
-  if(body.action==='me') return reply({ok:true,protocol:2,user:publicUser(user)});
+  if(body.action==='me') return reply({ok:true,protocol:2,features:{adminStorage:true},user:publicUser(user)});
   if(body.action==='logout') return reply({ok:true},200,{key:sessionKey,value:{...session,expiresAt:0}});
 
-  const administrative=['publish','unpublish','users','createUser','updateUser','reports'];
+  const administrative=['publish','unpublish','users','createUser','updateUser','reports','adminCatalog','adminCourse','saveCourse','archiveCourse'];
   if(administrative.includes(body.action))admin();
   const exact=key=>({op:'eq',value:key,ceiling:key+'\uffff'});
   const prefix=value=>({op:'gte',value,ceiling:value+'\uffff'});
   const id=String(body.courseId||body.course?.id||'');
   let queries;
-  if(['courses','catalog'].includes(body.action))queries=[prefix('course:'),prefix('progress:'+user.username+':')];
+  if(body.action==='adminCatalog')queries=[prefix('course:'),prefix('draft:')];
+  else if(['adminCourse','saveCourse','archiveCourse'].includes(body.action)||(body.action==='images'&&body.editor===true&&user.role==='admin'))queries=[exact('course:'+id),exact('draft:'+id)];
+  else if(['courses','catalog'].includes(body.action))queries=[prefix('course:'),prefix('progress:'+user.username+':')];
   else if(['course','images','progress','unpublish'].includes(body.action))queries=[exact('course:'+id),exact('progress:'+user.username+':'+id)];
   else if(body.action==='publish')queries=[exact('course:'+id),prefix('progress:')];
   else if(body.action==='users')queries=[prefix('user:')];
