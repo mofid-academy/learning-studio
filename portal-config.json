@@ -1,4 +1,4 @@
 {
   "enabled": true,
-  "apiUrl": "https://mofidstudio.app.n8n.cloud/webhook/mofid-learning-portal"
+  "apiUrl": "https://studiomofid.app.n8n.cloud/webhook/mofid-learning-portal"
 }
