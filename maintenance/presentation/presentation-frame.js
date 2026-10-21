@@ -20,5 +20,19 @@ function MofidPresentationFrame({course,index,onIndex}) {
   window.addEventListener('message',receive);return()=>window.removeEventListener('message',receive);
  },[course,onIndex]);
  T.useEffect(()=>{ref.current?.contentWindow?.postMessage({type:'mofid-presentation-jump',index},'*');},[index]);
+ T.useEffect(()=>{
+  const navigate=event=>{
+   const target=event.target;
+   if(event.defaultPrevented||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||/^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName)||target?.isContentEditable||target?.closest?.('[contenteditable="true"],[contenteditable=""],[role="textbox"],[role="combobox"],[role="slider"],[role="tab"],[role="dialog"]'))return;
+   const container=ref.current?.parentElement;
+   if(target!==document.body&&target!==document.documentElement&&!container?.contains(target))return;
+   const step=['ArrowDown','ArrowLeft','PageDown'].includes(event.key)?1:['ArrowUp','ArrowRight','PageUp'].includes(event.key)?-1:0;
+   if(!step)return;
+   event.preventDefault();
+   onIndex(Math.max(0,Math.min(course.slides.length-1,index+step)));
+  };
+  document.addEventListener('keydown',navigate);
+  return()=>document.removeEventListener('keydown',navigate);
+ },[index,course.slides.length,onIndex]);
  return (0,H.jsx)('iframe',{ref,title:'ارائهٔ آموزشی '+course.title,srcDoc:html,sandbox:'allow-scripts allow-modals allow-downloads',allow:'fullscreen',allowFullScreen:true,onLoad:()=>ref.current?.contentWindow?.postMessage({type:'mofid-presentation-jump',index},'*'),style:{width:'100%',height:'min(900px,85vh)',minHeight:580,border:'1px solid var(--border)',borderRadius:18,background:'transparent'}});
 }
