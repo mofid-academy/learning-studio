@@ -21,7 +21,9 @@ small{display:block;margin-top:8px;opacity:.65}
   try{
     const html=(await Promise.all(files.map(async p=>{const r=await fetch(p+"?v=20261021-presentation-navigation-17");if(!r.ok)throw new Error(p+" "+r.status);return r.text()}))).join("");
     const sharedHead='<link rel="stylesheet" href="/academy-assets/navigation.css?v=20261027-1"><link rel="stylesheet" href="./academy-skin.css?v=20261027-2"><scr'+'ipt defer src="/academy-assets/navigation.js?v=20261027-1" data-academy-section="studio"></scr'+'ipt>';
-    const integrated=html.replace('<html lang="fa" dir="rtl">','<html lang="fa" dir="rtl" data-academy-app="studio">').replace('</head>',sharedHead+'</head>');
+    // Preserve the original administrator document; only the participant route gets the shared design.
+    const participantView=new URLSearchParams(location.search).get('portal')==='participant';
+    const integrated=participantView?html.replace('<html lang="fa" dir="rtl">','<html lang="fa" dir="rtl" data-academy-app="studio">').replace('</head>',sharedHead+'</head>'):html;
     document.open();
     document.write(integrated);
     document.close();
