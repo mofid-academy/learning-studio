@@ -4,7 +4,7 @@ html[data-academy-app="studio"]{--background:#f2faf5;--foreground:#163b2d;--prim
 html[data-academy-app="studio"] body{font-family:"Pinar VF",Pinar,Tahoma,sans-serif;background:radial-gradient(ellipse at 0% 0%,#fffffffa,transparent 49%),radial-gradient(ellipse at 100% 100%,#ffffffd9,transparent 47%),linear-gradient(155deg,#f2faf5,#e7f4ec 55%,#f0f9f3);background-attachment:fixed;color:#163b2d}
 html[data-academy-app="studio"] #root{min-height:calc(100svh - var(--academy-navigation-height,82px))}
 html[data-academy-app="studio"] [data-slot="sidebar-wrapper"]{min-height:calc(100svh - var(--academy-navigation-height,82px));background:transparent}
-html[data-academy-app="studio"] .studio-sidebar [data-slot="sidebar-container"]{top:var(--academy-navigation-height,82px);height:calc(100svh - var(--academy-navigation-height,82px))}
+html[data-academy-app="studio"] .studio-sidebar[data-slot="sidebar-container"],html[data-academy-app="studio"] .studio-sidebar [data-slot="sidebar-container"]{top:var(--academy-navigation-height,82px);height:calc(100svh - var(--academy-navigation-height,82px))}
 html[data-academy-app="studio"] .studio-sidebar [data-slot="sidebar-inner"]{background:linear-gradient(150deg,#ffffffd9,#e7f7edde);border-inline-end:1px solid #ffffffeb;backdrop-filter:blur(28px)}
 html[data-academy-app="studio"] .sidebar-brand strong{color:#164d3b}html[data-academy-app="studio"] .sidebar-brand small{color:#7d9a87}
 html[data-academy-app="studio"] .side-nav{gap:8px;padding:8px 16px}
@@ -51,3 +51,41 @@ html[data-academy-app="studio"][data-theme="dark"] .btn{background:#3b4740;borde
 html[data-academy-app="studio"][data-theme="dark"] .btn.primary{background:linear-gradient(110deg,#91c2ae,#a3cbb9);color:#293d31;border-color:transparent}
 html[data-academy-app="studio"][data-theme="dark"] .drop-zone,html[data-academy-app="studio"][data-theme="dark"] .note-panel{background:#35443a;border-color:#73877a;color:#dce4dc}
 @media(max-width:767px){html[data-academy-app="studio"] .main{padding:23px 17px}html[data-academy-app="studio"] .panel{border-radius:19px}html[data-academy-app="studio"] #root>section.panel{margin:26px 16px!important;max-width:none!important;padding:27px 23px!important}html[data-academy-app="studio"] .lesson-content{padding:23px}html[data-academy-app="studio"] .topbar{padding:0 17px}}
+
+/* Keep the sidebar brand below the shared header, with a clear logo surface. */
+html[data-academy-app="studio"] .sidebar-brand{gap:12px;min-height:106px;padding:20px 16px;flex-shrink:0;position:relative;z-index:1}
+html[data-academy-app="studio"] .sidebar-brand>div{min-width:0}
+html[data-academy-app="studio"] .sidebar-brand strong{font-size:17px;line-height:1.8;overflow-wrap:anywhere}
+html[data-academy-app="studio"] .sidebar-logo{width:66px;height:66px;max-width:66px;object-fit:contain;padding:5px;background:#fff;border:1px solid #d7e7dd;border-radius:16px;box-shadow:0 6px 18px #164d3b12;flex-shrink:0}
+html[data-academy-app="studio"] .academy-navigation-brand img{width:54px;height:54px;padding:3px;border-radius:14px;background:#fff}
+
+/* Lesson surfaces use the exam's white form and muted text. Quiz colors stay as they are. */
+html[data-academy-app="studio"] .lesson-layout{--lesson-paper:#fff;--lesson-ink:#161a18;--lesson-muted:#454d48;--lesson-line:#e1e8e3;--lesson-primary:#0f7c72;--lesson-end:#3fc1be;--lesson-note:#f3faf6;--lesson-active:#e6f5ee;--lesson-side:linear-gradient(145deg,rgba(255,255,255,.8),rgba(240,255,247,.5))}
+html[data-academy-app="studio"] .lesson-layout>.lesson-content{background:var(--lesson-paper);color:var(--lesson-ink);border:1px solid var(--lesson-line);border-radius:25px;box-shadow:0 24px 70px rgba(0,35,20,.14),0 2px 8px rgba(0,0,0,.025);padding:30px 36px}
+html[data-academy-app="studio"] .lesson-content h2,html[data-academy-app="studio"] .lesson-content .reading-section h3{color:var(--lesson-ink);font-weight:750;line-height:1.9}
+html[data-academy-app="studio"] .lesson-content .reading-section p{color:var(--lesson-muted);font-size:16px;line-height:2.2}
+html[data-academy-app="studio"] .lesson-content .objectives{color:var(--lesson-muted);background:var(--lesson-note);border:1px solid var(--lesson-line);border-inline-start:3px solid var(--lesson-primary);border-radius:13px}
+html[data-academy-app="studio"] .lesson-content .objectives h3,html[data-academy-app="studio"] .lesson-content .objectives ul{color:var(--lesson-muted)}
+html[data-academy-app="studio"] .lesson-content .source-link{color:var(--lesson-primary)}
+html[data-academy-app="studio"] .lesson-layout>aside.panel{background:var(--lesson-side);border:1px solid var(--lesson-line);border-radius:24px;box-shadow:0 16px 40px rgba(0,76,52,.08);backdrop-filter:blur(24px);color:var(--lesson-ink)}
+html[data-academy-app="studio"] .lesson-layout .module-btn{color:var(--lesson-muted);border-radius:12px;line-height:2}
+html[data-academy-app="studio"] .lesson-layout .module-btn.active{color:var(--lesson-ink);background:var(--lesson-active);border-color:var(--lesson-line)}
+html[data-academy-app="studio"] .lesson-layout .module-index{background:var(--lesson-paper);border-color:var(--lesson-line);color:var(--lesson-primary);border-radius:9px}
+html[data-academy-app="studio"] .lesson-layout .module-btn small,html[data-academy-app="studio"] .lesson-layout .reading-progress{color:var(--lesson-muted);border-color:var(--lesson-line)}
+html[data-academy-app="studio"] .lesson-layout [data-slot="progress"]{background:var(--lesson-active);height:6px;border-radius:999px}
+html[data-academy-app="studio"] .lesson-layout [data-slot="progress-indicator"]{background:linear-gradient(90deg,var(--lesson-primary),var(--lesson-end))}
+html[data-academy-app="studio"] .lesson-layout .lesson-next{border-color:var(--lesson-line)}
+html[data-academy-app="studio"] .lesson-layout .btn{background:var(--lesson-paper);color:var(--lesson-muted);border-color:var(--lesson-line);border-radius:12px}
+html[data-academy-app="studio"] .lesson-layout .btn.primary{background:linear-gradient(100deg,var(--lesson-primary),var(--lesson-end));color:#fff;border-color:transparent;min-height:49px;box-shadow:0 8px 22px rgba(15,124,114,.2)}
+
+/* The course heading changes only while the Lessons tab is active. */
+html[data-academy-app="studio"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout){background:radial-gradient(ellipse at 10% 0%,rgba(255,255,255,.76),transparent 56%),linear-gradient(145deg,rgba(255,255,255,.56),rgba(240,255,247,.27))!important;color:#164d3b;border:1px solid rgba(255,255,255,.9);box-shadow:0 20px 50px rgba(0,76,52,.1)}
+html[data-academy-app="studio"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout) :is(h1,p,.eyebrow,.course-meta,.tag){color:#164d3b}
+html[data-academy-app="studio"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout) .tag{background:rgba(255,255,255,.65);border:1px solid #d7e8dd}
+
+html[data-academy-app="studio"][data-theme="dark"] .lesson-layout{--lesson-paper:#343e38;--lesson-ink:#dce4dc;--lesson-muted:#becabe;--lesson-line:#697d6f;--lesson-primary:#91c2ae;--lesson-end:#a6cebc;--lesson-note:#3c4c40;--lesson-active:#435e4c;--lesson-side:linear-gradient(145deg,rgba(66,82,71,.85),rgba(49,63,54,.8))}
+html[data-academy-app="studio"][data-theme="dark"] .lesson-layout .btn.primary{color:#293d31}
+html[data-academy-app="studio"][data-theme="dark"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout){background:linear-gradient(145deg,rgba(66,82,71,.85),rgba(49,63,54,.8))!important;border-color:#697d6f;color:#dce4dc}
+html[data-academy-app="studio"][data-theme="dark"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout) :is(h1,p,.eyebrow,.course-meta,.tag){color:#dce4dc}
+html[data-academy-app="studio"][data-theme="dark"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout) .tag{background:#3c4c40;border-color:#697d6f}
+@media(max-width:767px){html[data-academy-app="studio"] .lesson-layout>.lesson-content{padding:23px 20px;border-radius:19px}html[data-academy-app="studio"] .academy-navigation-brand img{width:44px;height:44px}html[data-academy-app="studio"] .sidebar-logo{width:60px;height:60px;max-width:60px}}
