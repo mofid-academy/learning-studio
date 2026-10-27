@@ -78,16 +78,16 @@ html[data-academy-app="studio"] .lesson-layout .lesson-next{border-color:var(--l
 html[data-academy-app="studio"] .lesson-layout .btn{background:var(--lesson-paper);color:var(--lesson-muted);border-color:var(--lesson-line);border-radius:12px}
 html[data-academy-app="studio"] .lesson-layout .btn.primary{background:linear-gradient(100deg,var(--lesson-primary),var(--lesson-end));color:#fff;border-color:transparent;min-height:49px;box-shadow:0 8px 22px rgba(15,124,114,.2)}
 
-/* The course heading changes only while the Lessons tab is active. */
-html[data-academy-app="studio"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout){background:radial-gradient(ellipse at 10% 0%,rgba(255,255,255,.76),transparent 56%),linear-gradient(145deg,rgba(255,255,255,.56),rgba(240,255,247,.27))!important;color:#164d3b;border:1px solid rgba(255,255,255,.9);box-shadow:0 20px 50px rgba(0,76,52,.1)}
-html[data-academy-app="studio"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout) :is(h1,p,.eyebrow,.course-meta,.tag){color:#164d3b}
-html[data-academy-app="studio"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout) .tag{background:rgba(255,255,255,.65);border:1px solid #d7e8dd}
+/* Use the same course heading in Lessons, Quiz, Flashcards and Presentation. */
+html[data-academy-app="studio"] .course-hero{background:radial-gradient(ellipse at 10% 0%,rgba(255,255,255,.76),transparent 56%),linear-gradient(145deg,rgba(255,255,255,.56),rgba(240,255,247,.27))!important;color:#164d3b;border:1px solid rgba(255,255,255,.9);box-shadow:0 20px 50px rgba(0,76,52,.1)}
+html[data-academy-app="studio"] .course-hero :is(h1,p,.eyebrow,.course-meta,.tag){color:#164d3b}
+html[data-academy-app="studio"] .course-hero .tag{background:rgba(255,255,255,.65);border:1px solid #d7e8dd}
 
 html[data-academy-app="studio"][data-theme="dark"] .lesson-layout{--lesson-paper:#343e38;--lesson-ink:#dce4dc;--lesson-muted:#becabe;--lesson-line:#697d6f;--lesson-primary:#91c2ae;--lesson-end:#a6cebc;--lesson-note:#3c4c40;--lesson-active:#435e4c;--lesson-side:linear-gradient(145deg,rgba(66,82,71,.85),rgba(49,63,54,.8))}
 html[data-academy-app="studio"][data-theme="dark"] .lesson-layout .btn.primary{color:#293d31}
-html[data-academy-app="studio"][data-theme="dark"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout){background:linear-gradient(145deg,rgba(66,82,71,.85),rgba(49,63,54,.8))!important;border-color:#697d6f;color:#dce4dc}
-html[data-academy-app="studio"][data-theme="dark"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout) :is(h1,p,.eyebrow,.course-meta,.tag){color:#dce4dc}
-html[data-academy-app="studio"][data-theme="dark"] .course-hero:has(+ [data-slot="tabs"] [data-slot="tabs-content"][data-state="active"] .lesson-layout) .tag{background:#3c4c40;border-color:#697d6f}
+html[data-academy-app="studio"][data-theme="dark"] .course-hero{background:linear-gradient(145deg,rgba(66,82,71,.85),rgba(49,63,54,.8))!important;border-color:#697d6f;color:#dce4dc}
+html[data-academy-app="studio"][data-theme="dark"] .course-hero :is(h1,p,.eyebrow,.course-meta,.tag){color:#dce4dc}
+html[data-academy-app="studio"][data-theme="dark"] .course-hero .tag{background:#3c4c40;border-color:#697d6f}
 @media(max-width:767px){html[data-academy-app="studio"] .lesson-layout>.lesson-content{padding:23px 20px;border-radius:19px}html[data-academy-app="studio"] .academy-navigation-brand img{width:44px;height:44px}html[data-academy-app="studio"] .sidebar-logo{width:60px;height:60px;max-width:60px}}
 
 /* Participant sidebar: use the same pale glass panel as the exam form. */
@@ -97,3 +97,9 @@ html[data-academy-app="studio"] .studio-sidebar .side-footer{background:rgba(255
 html[data-academy-app="studio"][data-theme="dark"] .studio-sidebar [data-slot="sidebar-inner"],html[data-academy-app="studio"][data-theme="dark"] [data-slot="sidebar"][data-mobile="true"]{background:radial-gradient(ellipse at 10% 0%,rgba(171,199,177,.075),transparent 56%),linear-gradient(145deg,rgba(66,82,71,.85),rgba(49,63,54,.8))!important;color:#dce4dc;border-color:rgba(170,193,175,.34);box-shadow:0 22px 60px rgba(14,24,17,.16),inset 1px 1px 0 rgba(220,232,221,.07),inset -1px -1px 0 rgba(145,194,174,.04)}
 html[data-academy-app="studio"][data-theme="dark"] .studio-sidebar :is(.side-label,.side-footer,.sidebar-mini,.sidebar-brand small){color:#becabe}
 html[data-academy-app="studio"][data-theme="dark"] .studio-sidebar .side-footer{background:rgba(223,233,224,.025);border-top-color:#637b69}
+
+/* Round the exposed sidebar edge and replace the hard container divider. */
+html[data-academy-app="studio"] .studio-sidebar[data-slot="sidebar-container"]{border:0;border-radius:24px 0 0 24px;background:transparent}
+html[data-academy-app="studio"] .studio-sidebar[data-slot="sidebar-container"]>[data-slot="sidebar-inner"]{position:relative;isolation:isolate;overflow:hidden;border:1px solid rgba(68,135,101,.14);border-inline-start:0;border-radius:inherit}
+html[data-academy-app="studio"] [data-slot="sidebar"][data-mobile="true"]{overflow:hidden;border:1px solid rgba(68,135,101,.14);border-inline-start:0;border-radius:24px 0 0 24px}
+html[data-academy-app="studio"][data-theme="dark"] .studio-sidebar[data-slot="sidebar-container"]>[data-slot="sidebar-inner"],html[data-academy-app="studio"][data-theme="dark"] [data-slot="sidebar"][data-mobile="true"]{border-color:rgba(170,193,175,.28)}
