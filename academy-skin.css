@@ -1,0 +1,53 @@
+/* Studio-only presentation. Authentication, course data and all handlers are unchanged. */
+@font-face{font-family:"Pinar VF";src:url('/Academy-Exam/assets/Pinar-VF.woff') format('woff');font-weight:300 900;font-display:swap}
+html[data-academy-app="studio"]{--background:#f2faf5;--foreground:#163b2d;--primary:#0f7c72;--primary-foreground:#fff;--secondary:#e8f5ed;--border:#dce9df;--input:#d8e5de;--ring:#139b83;--sidebar:#eef8f1;--sidebar-foreground:#355e49;--sidebar-primary:#0f7c72;--sidebar-primary-foreground:#fff;--sidebar-accent:#d9eee1;--sidebar-accent-foreground:#164d3b;--sidebar-border:#d3e5d8;--muted-foreground:#637e6c;color-scheme:light}
+html[data-academy-app="studio"] body{font-family:"Pinar VF",Pinar,Tahoma,sans-serif;background:radial-gradient(ellipse at 0% 0%,#fffffffa,transparent 49%),radial-gradient(ellipse at 100% 100%,#ffffffd9,transparent 47%),linear-gradient(155deg,#f2faf5,#e7f4ec 55%,#f0f9f3);background-attachment:fixed;color:#163b2d}
+html[data-academy-app="studio"] #root{min-height:calc(100svh - var(--academy-navigation-height,82px))}
+html[data-academy-app="studio"] [data-slot="sidebar-wrapper"]{min-height:calc(100svh - var(--academy-navigation-height,82px));background:transparent}
+html[data-academy-app="studio"] .studio-sidebar [data-slot="sidebar-container"]{top:var(--academy-navigation-height,82px);height:calc(100svh - var(--academy-navigation-height,82px))}
+html[data-academy-app="studio"] .studio-sidebar [data-slot="sidebar-inner"]{background:linear-gradient(150deg,#ffffffd9,#e7f7edde);border-inline-end:1px solid #ffffffeb;backdrop-filter:blur(28px)}
+html[data-academy-app="studio"] .sidebar-brand strong{color:#164d3b}html[data-academy-app="studio"] .sidebar-brand small{color:#7d9a87}
+html[data-academy-app="studio"] .side-nav{gap:8px;padding:8px 16px}
+html[data-academy-app="studio"] .nav-btn{color:#547a62;border:1px solid transparent;border-radius:12px}
+html[data-academy-app="studio"] .nav-btn.active{color:#125c4c;background:linear-gradient(120deg,#00af9d29,#ffffff7a);border-color:#00af9d33;box-shadow:0 4px 12px #005f410b}
+html[data-academy-app="studio"] .nav-btn:hover:not(.active){color:#125c4c;background:#e0f1e7}
+html[data-academy-app="studio"] .side-label{color:#6c8b78}html[data-academy-app="studio"] .sidebar-mini{color:#60806c;border-color:#d0e4d7}html[data-academy-app="studio"] .sidebar-mini strong{color:#315f47}html[data-academy-app="studio"] .side-footer{color:#62816b}html[data-academy-app="studio"] .avatar{color:#1f7255;background:#d6ecdc}
+html[data-academy-app="studio"] .topbar{background:#ffffff5c;backdrop-filter:blur(18px);border-color:#dce9df}
+html[data-academy-app="studio"] .main{max-width:1280px;padding:30px 32px 44px}
+html[data-academy-app="studio"] .panel,html[data-academy-app="studio"] .empty-state{background:#fff;border:1px solid #dfe9e2;border-radius:23px;box-shadow:0 18px 50px #0a4d470a;color:#163b2d}
+html[data-academy-app="studio"] #root>section.panel{position:relative;margin:clamp(26px,7vh,70px) auto!important;max-width:460px!important;padding:32px!important;overflow:visible}
+html[data-academy-app="studio"] #root>section.panel::before{content:"";position:absolute;top:0;right:25px;left:25px;height:3px;background:linear-gradient(90deg,#e0564c 0 15%,#12968a 15% 100%);border-radius:0 0 5px 5px}
+html[data-academy-app="studio"] #root>section.panel h1{font-weight:800;font-size:26px;line-height:1.9;color:#164d3b}
+html[data-academy-app="studio"] .field{margin-top:16px}html[data-academy-app="studio"] .field label{font-size:12px;color:#54705e}
+html[data-academy-app="studio"] input,html[data-academy-app="studio"] textarea,html[data-academy-app="studio"] .select-field{border-color:#d8e5de;border-radius:12px;background:#fcfefc;padding:12px 15px;color:#163b2d}
+html[data-academy-app="studio"] input:focus,html[data-academy-app="studio"] textarea:focus{border-color:#12968a;box-shadow:0 0 0 4px #19a89418;outline:none;background:#fff}
+html[data-academy-app="studio"] .btn{border-radius:12px;min-height:44px;border-color:#d7e7dc;color:#35654c}
+html[data-academy-app="studio"] .btn.primary{background:linear-gradient(110deg,#0f7c72,#12968a);color:#fff;border-color:transparent;box-shadow:0 7px 18px #0f7c7226}
+html[data-academy-app="studio"] .btn.primary:disabled{box-shadow:none}
+html[data-academy-app="studio"] .panel-head{border-bottom-color:#e7eee9;padding:23px 25px}
+html[data-academy-app="studio"] .steps{border-radius:18px;background:#ffffff7a;border-color:#ffffffcc;padding:16px 20px;backdrop-filter:blur(18px)}
+html[data-academy-app="studio"] .step-number{border-radius:9px}html[data-academy-app="studio"] .step.on .step-number{background:#0f7c72;color:#fff;border-color:#0f7c72}
+html[data-academy-app="studio"] .drop-zone{border-radius:16px;background:linear-gradient(145deg,#f7fcf8,#eef8f2);border-color:#abcdb9}
+html[data-academy-app="studio"] .course-hero{background:linear-gradient(125deg,#0a5b52,#128d79);border-radius:23px;box-shadow:0 16px 35px #0a5b5217}
+html[data-academy-app="studio"] .note-panel{background:linear-gradient(150deg,#ffffff91,#e4f4e8b3);border-color:#d4e6d9;border-radius:18px}
+html[data-academy-app="studio"] .tag{border-radius:8px}html[data-academy-app="studio"] .course-card{padding:25px}
+html[data-academy-app="studio"] .lesson-content{padding:28px 32px}html[data-academy-app="studio"] .reading-section p{color:#496853}
+html[data-academy-app="studio"] .quiz-shell,html[data-academy-app="studio"] .flash-shell{border-radius:24px;--study-bg:#edf8f1;--study-glass:#fff;--study-text:#163b2d;--study-muted:#607b69;--study-heading:#0f7c72;--study-line:#d4e7d9}
+html[data-academy-app="studio"] .quiz-option{border-radius:14px}html[data-academy-app="studio"] .module-btn.active{background:#e4f3e8;border-color:#cee5d5}
+html[data-academy-app="studio"] .mofid-portal-dialog{border-radius:23px}html[data-academy-app="studio"] .mofid-portal-controls .btn{box-shadow:0 7px 25px #164d3b13}
+/* Match the exam's muted green dark palette without changing the theme control. */
+html[data-academy-app="studio"][data-theme="dark"]{--background:#2b3430;--foreground:#dce4dc;--card:#343e38;--card-foreground:#dce4dc;--border:#697d6f;--input:#819485;--primary:#91c2ae;--primary-foreground:#293d31;--muted-foreground:#becabe;--sidebar:#35443a;--sidebar-foreground:#d0dfd2;--sidebar-accent:#435b49;--sidebar-border:#637b69}
+html[data-academy-app="studio"][data-theme="dark"] body{color:#dce4dc;background:radial-gradient(ellipse at 96% 0%,#73a9910e,transparent 48%),linear-gradient(155deg,#2b3430,#303c34 55%,#2c3730)}
+html[data-academy-app="studio"][data-theme="dark"] .panel,html[data-academy-app="studio"][data-theme="dark"] .empty-state{background:#343e38;color:#dce4dc;border-color:#697d6f}
+html[data-academy-app="studio"][data-theme="dark"] .studio-sidebar [data-slot="sidebar-inner"]{background:linear-gradient(145deg,#425247d9,#313f36cc);border-color:#637b69}
+html[data-academy-app="studio"][data-theme="dark"] .sidebar-brand strong,html[data-academy-app="studio"][data-theme="dark"] .sidebar-mini strong,html[data-academy-app="studio"][data-theme="dark"] #root>section.panel h1{color:#dce4dc}
+html[data-academy-app="studio"][data-theme="dark"] .nav-btn,html[data-academy-app="studio"][data-theme="dark"] .sidebar-mini,html[data-academy-app="studio"][data-theme="dark"] .side-footer{color:#becabe}
+html[data-academy-app="studio"][data-theme="dark"] .nav-btn.active{background:#435f4f;border-color:#8aa592;color:#dce4dc}
+html[data-academy-app="studio"][data-theme="dark"] .nav-btn:hover:not(.active){background:#4a6050;color:#dce4dc}
+html[data-academy-app="studio"][data-theme="dark"] .topbar,html[data-academy-app="studio"][data-theme="dark"] .steps{background:#35443acc;border-color:#637b69}
+html[data-academy-app="studio"][data-theme="dark"] input,html[data-academy-app="studio"][data-theme="dark"] textarea,html[data-academy-app="studio"][data-theme="dark"] .select-field{background:#303a34;border-color:#819485;color:#dce4dc}
+html[data-academy-app="studio"][data-theme="dark"] .field label,html[data-academy-app="studio"][data-theme="dark"] .reading-section p{color:#becabe}
+html[data-academy-app="studio"][data-theme="dark"] .btn{background:#3b4740;border-color:#819485;color:#dce4dc}
+html[data-academy-app="studio"][data-theme="dark"] .btn.primary{background:linear-gradient(110deg,#91c2ae,#a3cbb9);color:#293d31;border-color:transparent}
+html[data-academy-app="studio"][data-theme="dark"] .drop-zone,html[data-academy-app="studio"][data-theme="dark"] .note-panel{background:#35443a;border-color:#73877a;color:#dce4dc}
+@media(max-width:767px){html[data-academy-app="studio"] .main{padding:23px 17px}html[data-academy-app="studio"] .panel{border-radius:19px}html[data-academy-app="studio"] #root>section.panel{margin:26px 16px!important;max-width:none!important;padding:27px 23px!important}html[data-academy-app="studio"] .lesson-content{padding:23px}html[data-academy-app="studio"] .topbar{padding:0 17px}}
