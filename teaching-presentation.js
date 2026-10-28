@@ -59,11 +59,11 @@
   function updateControls() {
     picker.value = String(index);
     byId('counter').textContent = fa(index + 1) + ' از ' + fa(slides.length);
-    byId('counter-top').textContent = fa(index + 1) + ' از ' + fa(slides.length);
+    if (byId('counter-top')) byId('counter-top').textContent = fa(index + 1) + ' از ' + fa(slides.length);
     byId('prev').disabled = cover || index === 0;
     byId('next').disabled = !cover && index === slides.length - 1;
-    byId('prev-top').disabled = index === 0;
-    byId('next-top').disabled = index === slides.length - 1;
+    if (byId('prev-top')) byId('prev-top').disabled = index === 0;
+    if (byId('next-top')) byId('next-top').disabled = index === slides.length - 1;
     byId('next').textContent = cover ? (index ? 'ادامهٔ ارائه' : 'شروع ارائه') : 'اسلاید بعد';
     byId('contents').disabled = cover;
     progress.setAttribute('aria-valuemax', String(slides.length));
@@ -119,8 +119,8 @@
   document.querySelectorAll('[data-slide]').forEach(button => button.addEventListener('click', () => show(button.dataset.slide)));
   byId('prev').onclick = () => show(targetIndex - 1);
   byId('next').onclick = () => show(cover ? index : targetIndex + 1);
-  byId('prev-top').onclick = () => show(targetIndex - 1);
-  byId('next-top').onclick = () => show(targetIndex + 1);
+  if (byId('prev-top')) byId('prev-top').onclick = () => show(targetIndex - 1);
+  if (byId('next-top')) byId('next-top').onclick = () => show(targetIndex + 1);
   picker.onchange = () => show(picker.value);
   byId('contents').onclick = showContents;
   teachingButton.onclick = () => { teaching = !teaching; teachingButton.setAttribute('aria-pressed', String(teaching)); prepareSteps(); };
@@ -153,6 +153,8 @@
 
   function upgrade(original) {
     if (typeof original !== 'string' || original.includes('id="mofid-teaching-style"') || !original.includes('id="slide-picker"') || !original.includes('class="lesson-slide')) return original;
+    const required=['intro','deck','slide-picker','counter','prev','next','contents','theme','motion','fullscreen','print'];
+    if (!required.every(id=>original.includes('id="'+id+'"')) || !original.includes('<body>') || !original.includes('<div class="actions">')) return original;
     let html = original.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
     html = html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/i, () => '<style id="mofid-teaching-style">' + style.replace(/<\/style/gi, '<\\/style') + '</style>');
     html = html.replace('<body>', '<body class="mofid-teaching lesson-light teaching-cover">');
@@ -165,5 +167,5 @@
     html = html.replace('</body>', '<script>' + player.replace(/<\/script/gi, '<\\/script') + '</script></body>');
     return html;
   }
-  window.MofidTeachingPresentation = Object.freeze({upgrade, version:'20261028-1'});
+  window.MofidTeachingPresentation = Object.freeze({upgrade, version:'20261028-2'});
 })();

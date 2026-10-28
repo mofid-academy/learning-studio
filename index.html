@@ -24,7 +24,7 @@ small{display:block;margin-top:8px;opacity:.65}
     // Preserve the original administrator document; only the participant route gets the shared design.
     const participantView=new URLSearchParams(location.search).get('portal')==='participant';
     // Upgrade only the generated presentation; keep the surrounding admin and participant applications intact.
-    const presentationHead='<scr'+'ipt src="./teaching-presentation.js?v=20261028-1"></scr'+'ipt>';
+    const presentationHead='<scr'+'ipt src="./teaching-presentation.js?v=20261028-2"></scr'+'ipt>';
     const presentationSignature='function mofidOrbitalHTML(course, remoteImages = []) {';
     const presentationBridge='function mofidOrbitalHTML(course, remoteImages = []) {\n  const original=mofidOriginalPresentationHTML(course,remoteImages);\n  try { return window.MofidTeachingPresentation?.upgrade(original) || original; } catch { return original; }\n}\nfunction mofidOriginalPresentationHTML(course, remoteImages = []) {';
     const presentationReady=html.replace(presentationSignature,presentationBridge).replace('</head>',presentationHead+'</head>');
