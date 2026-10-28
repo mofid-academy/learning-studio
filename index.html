@@ -23,11 +23,10 @@ small{display:block;margin-top:8px;opacity:.65}
     const sharedHead='<link rel="stylesheet" href="/academy-assets/navigation.css?v=20261027-7"><link rel="stylesheet" href="./academy-skin.css?v=20261027-5"><scr'+'ipt defer src="/academy-assets/navigation.js?v=20261027-7" data-academy-section="studio"></scr'+'ipt>';
     // Preserve the original administrator document; only the participant route gets the shared design.
     const participantView=new URLSearchParams(location.search).get('portal')==='participant';
-    // Upgrade only the generated presentation; keep the surrounding admin and participant applications intact.
-    const presentationHead='<scr'+'ipt src="./teaching-presentation.js?v=20261028-2"></scr'+'ipt>';
-    const presentationSignature='function mofidOrbitalHTML(course, remoteImages = []) {';
-    const presentationBridge='function mofidOrbitalHTML(course, remoteImages = []) {\n  const original=mofidOriginalPresentationHTML(course,remoteImages);\n  try { return window.MofidTeachingPresentation?.upgrade(original) || original; } catch { return original; }\n}\nfunction mofidOriginalPresentationHTML(course, remoteImages = []) {';
-    const presentationReady=html.replace(presentationSignature,presentationBridge).replace('</head>',presentationHead+'</head>');
+    // The surrounding login, lesson, quiz and administration application stays intact.
+    const presentationHead='<scr'+'ipt src="./teaching-presentation.js?v=20261028-3"></scr'+'ipt>';
+    const presentationPatches=[["function mofidOrbitalHTML(course, remoteImages = []) {","function mofidPresentationCourse(course) {\n  try { return window.MofidTeachingPresentation?.compact(course) || course; } catch { return course; }\n}\nfunction mofidOrbitalHTML(course, remoteImages = []) {\n  const original=mofidOriginalPresentationHTML(mofidPresentationCourse(course),remoteImages);\n  try { return window.MofidTeachingPresentation?.upgrade(original) || original; } catch { return original; }\n}\nfunction mofidOriginalPresentationHTML(course, remoteImages = []) {"],["function eD({course:e,onChange:t,onPPT:n,pptBusy:r,onSources:i}){","function eD(props) {\n const course=T.useMemo(()=>mofidPresentationCourse(props.course),[props.course]);\n return (0,H.jsx)(mofidOriginalPresentationPanel,{...props,course});\n}\nfunction mofidOriginalPresentationPanel({course:e,onChange:t,onPPT:n,pptBusy:r,onSources:i}){"],["function MofidPresentationFrame({course,index,onIndex}) {\n const ref=T.useRef(null);","function MofidPresentationFrame({course,index,onIndex}) {\n const ref=T.useRef(null);\n T.useEffect(()=>window.MofidTeachingPresentation?.attachFrame(ref.current),[course.id]);"],["await CE(await mfHydrateCourse(e))","await CE(await mfHydrateCourse(mofidPresentationCourse(e)))"],["Og(e.slides.length),` اسلاید`","Og(mofidPresentationCourse(e).slides.length),` اسلاید`"],["(0,H.jsx)(`button`,{className:`btn`,onClick:()=>mofidOrbitalDownload(e),children:`دانلود ارائه HTML`})","(0,H.jsx)(`button`,{className:`btn`,onClick:()=>mofidOrbitalDownload(e),children:`دانلود ارائه HTML`}),(0,H.jsx)(`button`,{className:`btn`,onClick:()=>window.MofidTeachingPresentation?.enterPresentation(),children:`ارائه تمام‌صفحه`})"],["محتوای اسلایدها را بررسی و در صورت نیاز ویرایش کنید.","ارائهٔ کوتاه از نکات اصلی؛ متن کامل در بخش درس‌هاست."]];
+    const presentationReady=presentationPatches.reduce((text,[before,after])=>text.replace(before,after),html).replace('</head>',presentationHead+'</head>');
     const integrated=participantView?presentationReady.replace('<html lang="fa" dir="rtl">','<html lang="fa" dir="rtl" data-academy-app="studio">').replace('</head>',sharedHead+'</head>'):presentationReady;
     document.open();
     document.write(integrated);
@@ -39,4 +38,3 @@ small{display:block;margin-top:8px;opacity:.65}
 </script>
 </body>
 </html>
-
