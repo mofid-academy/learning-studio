@@ -274,6 +274,7 @@
     const required=['intro','deck','slide-picker','counter','prev','next','contents','theme','motion','fullscreen','print'];
     if (!required.every(id=>original.includes('id="'+id+'"')) || !original.includes('<body>') || !original.includes('<div class="actions">')) return original;
     let html = original.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    html = html.replace(/<footer>منبع:[\s\S]*?<\/footer>/g, '');
     html = html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/i, () => '<style id="mofid-teaching-style">' + style.replace(/<\/style/gi, '<\\/style') + '</style>');
     html = html.replace('<body>', '<body class="mofid-teaching lesson-light teaching-cover">');
     html = html.replace('<strong>مفید آکادمی</strong>', '<div class="teaching-brand"><strong>مفید آکادمی</strong><small class="teaching-wordmark">ACADEMY MOFID</small></div>');
@@ -285,5 +286,5 @@
     html = html.replace('</body>', '<script>' + player.replace(/<\/script/gi, '<\\/script') + '</script></body>');
     return html;
   }
-  window.MofidTeachingPresentation = Object.freeze({upgrade, compact, attachFrame, enterPresentation, leavePresentation, version:'20261028-3'});
+  window.MofidTeachingPresentation = Object.freeze({upgrade, compact, attachFrame, enterPresentation, leavePresentation, version:'20261028-4'});
 })();
