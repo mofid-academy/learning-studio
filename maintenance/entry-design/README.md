@@ -16,3 +16,5 @@
 - فایل Sign In Card ارسالی کاربر، با پالت مفید و ورود واقعی موجود.
 - https://21st.dev/@designali-in/components/background-gradient-animation/background-gradient-animation
 - مشخصات و الگوی حرکت: https://ui.aceternity.com/components/background-gradient-animation
+
+گزینه‌های پاسخ و دکمه‌های قبلی/بعدی در آزمون عمومی و آزمون تمرینی استودیو از Shiny Borders Button با هالهٔ داخلی و حاشیهٔ سبز/سفید الهام گرفته‌اند: https://21st.dev/@muhammad-binsalman/components/shiny-borders-button . تغییر فقط CSS است؛ منطق پاسخ، تایمر، جابه‌جایی و ثبت آزمون تغییر نکرده است. CSS قبلی آزمون به‌صورت کامل و با همان SHA مبنا حفظ شده و قواعد جدید به انتهای آن افزوده می‌شوند. رنگ حالت درست/نادرست، انتخاب‌شده و وضعیت غیرفعال حفظ می‌شوند. `academy-assets/control-preview.html` یک نمونهٔ عمومی برای QA است و هیچ محتوای آزمون واقعی، تایمر یا ثبت پاسخی ندارد.
