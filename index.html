@@ -23,7 +23,12 @@ small{display:block;margin-top:8px;opacity:.65}
     const sharedHead='<link rel="stylesheet" href="/academy-assets/navigation.css?v=20261027-7"><link rel="stylesheet" href="./academy-skin.css?v=20261027-5"><scr'+'ipt defer src="/academy-assets/navigation.js?v=20261027-7" data-academy-section="studio"></scr'+'ipt>';
     // Preserve the original administrator document; only the participant route gets the shared design.
     const participantView=new URLSearchParams(location.search).get('portal')==='participant';
-    const integrated=participantView?html.replace('<html lang="fa" dir="rtl">','<html lang="fa" dir="rtl" data-academy-app="studio">').replace('</head>',sharedHead+'</head>'):html;
+    // Upgrade only the generated presentation; keep the surrounding admin and participant applications intact.
+    const presentationHead='<scr'+'ipt src="./teaching-presentation.js?v=20261028-1"></scr'+'ipt>';
+    const presentationSignature='function mofidOrbitalHTML(course, remoteImages = []) {';
+    const presentationBridge='function mofidOrbitalHTML(course, remoteImages = []) {\n  const original=mofidOriginalPresentationHTML(course,remoteImages);\n  try { return window.MofidTeachingPresentation?.upgrade(original) || original; } catch { return original; }\n}\nfunction mofidOriginalPresentationHTML(course, remoteImages = []) {';
+    const presentationReady=html.replace(presentationSignature,presentationBridge).replace('</head>',presentationHead+'</head>');
+    const integrated=participantView?presentationReady.replace('<html lang="fa" dir="rtl">','<html lang="fa" dir="rtl" data-academy-app="studio">').replace('</head>',sharedHead+'</head>'):presentationReady;
     document.open();
     document.write(integrated);
     document.close();
