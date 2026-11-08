@@ -7,6 +7,7 @@
     if(route.redirect){location.replace(route.redirect);return;}
     const participantView=route.participant;
     const routedHTML=window.MofidStudioRouting.prepare(html,participantView);
+    const supportHead='<scr'+'ipt defer src="/academy-assets/support.js?v=20261108-support-1"></scr'+'ipt>';
     // The surrounding login, lesson, quiz and administration application stays intact.
     const presentationHead='<scr'+'ipt src="./teaching-presentation.js?v=20261028-6"></scr'+'ipt>';
     const presentationPatches=[["function mofidOrbitalHTML(course, remoteImages = []) {","function mofidPresentationCourse(course) {\n  try { return window.MofidTeachingPresentation?.compact(course) || course; } catch { return course; }\n}\nfunction mofidOrbitalHTML(course, remoteImages = []) {\n  const original=mofidOriginalPresentationHTML(mofidPresentationCourse(course),remoteImages);\n  try { return window.MofidTeachingPresentation?.upgrade(original) || original; } catch { return original; }\n}\nfunction mofidOriginalPresentationHTML(course, remoteImages = []) {"],["function eD({course:e,onChange:t,onPPT:n,pptBusy:r,onSources:i}){","function eD(props) {\n const course=T.useMemo(()=>mofidPresentationCourse(props.course),[props.course]);\n return (0,H.jsx)(mofidOriginalPresentationPanel,{...props,course});\n}\nfunction mofidOriginalPresentationPanel({course:e,onChange:t,onPPT:n,pptBusy:r,onSources:i}){"],["function MofidPresentationFrame({course,index,onIndex}) {\n const ref=T.useRef(null);","function MofidPresentationFrame({course,index,onIndex}) {\n const ref=T.useRef(null);\n T.useEffect(()=>window.MofidTeachingPresentation?.attachFrame(ref.current),[course.id]);"],["await CE(await mfHydrateCourse(e))","await CE(await mfHydrateCourse(mofidPresentationCourse(e)))"],["Og(e.slides.length),` اسلاید`","Og(mofidPresentationCourse(e).slides.length),` اسلاید`"],["(0,H.jsx)(`button`,{className:`btn`,onClick:()=>mofidOrbitalDownload(e),children:`دانلود ارائه HTML`})","(0,H.jsx)(`button`,{className:`btn`,onClick:()=>mofidOrbitalDownload(e),children:`دانلود ارائه HTML`}),(0,H.jsx)(`button`,{className:`btn`,onClick:()=>window.MofidTeachingPresentation?.enterPresentation(),children:`ارائه تمام‌صفحه`})"],["(0,H.jsx)(`p`,{className:`small-text muted`,children:`محتوای اسلایدها را بررسی و در صورت نیاز ویرایش کنید.`})","/*mofid-presentation-caption-removed*/null"]];
@@ -16,7 +17,7 @@
     const lightingHead='<link rel="stylesheet" href="/academy-assets/lighting.css?v=20261107-lighting-3"><scr'+'ipt defer src="/academy-assets/lighting.js?v=20261107-lighting-1"></scr'+'ipt>';
     const loginReady=routedHTML.replace(loginBefore,loginAfter);
     const presentationReady=presentationPatches.reduce((text,[before,after])=>text.replace(before,after),loginReady).replace('</head>',lightingHead+entryDesignHead+presentationHead+'</head>');
-    const integrated=presentationReady.replace('<html lang="fa" dir="rtl">','<html lang="fa" dir="rtl" data-academy-app="studio">').replace('</head>',sharedHead+'</head>');
+    const integrated=presentationReady.replace('<html lang="fa" dir="rtl">','<html lang="fa" dir="rtl" data-academy-app="studio">').replace('</head>',sharedHead+supportHead+'</head>');
     document.open();
     document.write(integrated);
     document.close();
